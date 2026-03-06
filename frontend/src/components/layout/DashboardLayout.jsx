@@ -42,7 +42,7 @@ const NAV_BY_ROLE = {
     { label: "Transactions", path: "/dashboard/transactions", icon: Activity },
     {
       label: "First Aid Requests",
-      path: "/dashboard/firstaid",
+      path: "/dashboard/firstaidrequest",
       icon: Package,
     },
   ],
@@ -60,7 +60,6 @@ function Sidebar({ open, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
   const navItems = NAV_BY_ROLE[user?.type] || [];
-
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -84,7 +83,11 @@ function Sidebar({ open, onClose }) {
         {/* Logo */}
         <div className="flex items-center justify-between p-4 border-b">
           <Link to="/" className="flex items-center gap-2 group">
-            <Stethoscope className="w-6 h-6 text-blue-600" />
+            <img
+              src="https://i.ibb.co.com/RT3Wn4W9/SUST-logo.png"
+              alt="SUST-logo"
+              className="w-6 h-6"
+            />
             <span className="font-semibold text-sm leading-tight">
               SUST Medical
               <br />
@@ -103,11 +106,11 @@ function Sidebar({ open, onClose }) {
         <div className="px-4 py-3 bg-blue-50 border-b">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-semibold shrink-0">
-              {(user?.name || user?.id || "?").charAt(0).toUpperCase()}
+              {(user?.fullname || user?.id || "?").charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">
-                {user?.name || user?.id}
+                {user?.fullname || user?.id}
               </p>
               <Badge variant="outline" className="text-xs mt-0.5">
                 {user?.type}

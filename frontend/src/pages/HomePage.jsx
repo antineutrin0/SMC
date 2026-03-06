@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Card,
@@ -45,8 +46,22 @@ import { LoadingSpinner, EmptyState } from "../components/shared";
 
 const ICON_MAP = { Stethoscope, Ambulance, Pill, Backpack };
 
+const backgroundImages = [
+  "https://www.sust.edu/public/uploads/website/OfficeRotatingBanner/43_6718b2837832e.jpg",
+  "https://www.sust.edu/public/uploads/website/OfficeRotatingBanner/43_6718b28378630.jpg",
+  "https://www.sust.edu/public/uploads/website/OfficeRotatingBanner/43_6718b283784ec.jpg",
+];
+
 export default function HomePage() {
   const { user } = useAuth();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % backgroundImages.length);
+    }, 5000); // Change image every 5 seconds
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: rosterRes, loading: rosterLoading } = useFetch(getPublicRoster);
   const roster = rosterRes?.data ?? [];
@@ -69,7 +84,11 @@ export default function HomePage() {
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Stethoscope className="w-7 h-7 text-blue-600 shrink-0" />
+            <img
+              src="https://i.ibb.co.com/RT3Wn4W9/SUST-logo.png"
+              alt="SUST-logo"
+              className="w-8 h-8 shrink-0"
+            />
             <div className="min-w-0">
               <p className="font-bold leading-tight text-sm sm:text-base">
                 SUST Medical Centre
@@ -101,40 +120,38 @@ export default function HomePage() {
 
       {/* Hero */}
       <section
-        className="relative h-56 sm:h-72 md:h-96 bg-cover bg-center"
+        className="relative h-56 sm:h-72 md:h-96 bg-cover bg-center transition-all duration-1000"
         style={{
-          backgroundImage: "url('https://i.ibb.co.com/9mhcLFxh/sust-7.jpg')",
+          backgroundImage: `url('${backgroundImages[currentImageIndex]}')`,
         }}
       >
-        <div className="absolute inset-0 bg-blue-900/60" />
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
         <div className="relative h-full flex flex-col items-center justify-center text-center px-4 text-white">
-          <h1 className="text-2xl sm:text-4xl font-bold mb-2">
-            Quality Healthcare for SUST Community
-          </h1>
-          <p className="text-sm sm:text-base text-blue-100 max-w-xl">
-            Providing comprehensive medical services to students, faculty, and
-            staff
-          </p>
-          {!user && (
-            <div className="flex gap-3 mt-6">
-              <Link to="/login">
-                <Button
-                  variant="default"
-                  className="bg-white text-blue-700 hover:bg-blue-50"
-                >
-                  Login to Portal
-                </Button>
-              </Link>
-              <Link to="/apply">
-                <Button
-                  variant="outline"
-                  className="border-white text-black hover:bg-white/60"
-                >
-                  Apply for Medical Card
-                </Button>
-              </Link>
-            </div>
-          )}
+          <div className=" p-6 rounded-xl max-w-4xl">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-2">
+              Quality Healthcare for SUST Community
+            </h1>
+            {!user && (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+                <Link to="/login">
+                  <Button
+                    variant="default"
+                    className="bg-white text-blue-700 hover:bg-blue-50"
+                  >
+                    Login to Portal
+                  </Button>
+                </Link>
+                <Link to="/apply">
+                  <Button
+                    variant="outline"
+                    className="border-white text-white bg-transparent hover:bg-white/20"
+                  >
+                    Apply for Medical Card
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
@@ -267,11 +284,11 @@ export default function HomePage() {
                             <CardContent className="pt-6 pb-4">
                               <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
                                 <span className="text-xl font-semibold text-blue-600">
-                                  {emp.full_name.charAt(0)}
+                                  {emp.fullname.charAt(0)}
                                 </span>
                               </div>
                               <p className="font-medium text-sm">
-                                {emp.full_name}
+                                {emp.fullname}
                               </p>
                               {emp.specialization && (
                                 <p className="text-xs text-muted-foreground mt-0.5">

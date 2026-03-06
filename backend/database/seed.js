@@ -110,7 +110,7 @@ async function seed() {
     // ];
     // for (const e of employees) {
     //   await conn.query(
-    //     `INSERT IGNORE INTO Employee (employee_id,full_name,designation,specialization,license_no,photo_url,contact_no,is_active,password_hash)
+    //     `INSERT IGNORE INTO Employee (employee_id,fullname,designation,specialization,license_no,photo_url,contact_no,is_active,password_hash)
     //      VALUES (?,?,?,?,?,?,?,?,?)`,
     //     e,
     //   );

@@ -1,5 +1,11 @@
 const db = require("../../config/db");
-const { ok, created, notFound, serverError, badRequest } = require("../../utils/response");
+const {
+  ok,
+  created,
+  notFound,
+  serverError,
+  badRequest,
+} = require("../../utils/response");
 
 // GET /api/driver/:driverId/logs
 const getLogs = async (req, res) => {
@@ -15,10 +21,12 @@ const getLogs = async (req, res) => {
        JOIN Person p        ON mc.PersonID  = p.person_id
        WHERE al.driver_id = ?
        ORDER BY al.departure_time DESC`,
-      [driverId]
+      [driverId],
     );
     return ok(res, { data: rows });
-  } catch (err) { serverError(res, err, "driver.getLogs"); }
+  } catch (err) {
+    serverError(res, err, "driver.getLogs");
+  }
 };
 
 // GET /api/driver/logs/all  (all drivers, admin-like summary)
@@ -27,16 +35,18 @@ const getAllLogs = async (req, res) => {
     const [rows] = await db.query(
       `SELECT al.*, mc.CardID,
               p.fullname  AS patient_name, p.contact_number,
-              e.full_name AS driver_name
+              e.fullname AS driver_name
        FROM ambulance_log al
        JOIN MedicalCard mc ON al.patient_id = mc.CardID
        JOIN Person p        ON mc.PersonID  = p.person_id
        LEFT JOIN Employee e ON al.driver_id = e.employee_id
        ORDER BY al.departure_time DESC
-       LIMIT 100`
+       LIMIT 100`,
     );
     return ok(res, { data: rows });
-  } catch (err) { serverError(res, err, "driver.getAllLogs"); }
+  } catch (err) {
+    serverError(res, err, "driver.getAllLogs");
+  }
 };
 
 // POST /api/driver/logs
@@ -48,18 +58,31 @@ const createLog = async (req, res) => {
     // Verify patient card exists
     const [cardRows] = await db.query(
       "SELECT CardID FROM MedicalCard WHERE CardID = ? AND Status = 'Active'",
-      [patientId]
+      [patientId],
     );
-    if (!cardRows.length) return notFound(res, "Active medical card not found for given patientId");
+    if (!cardRows.length)
+      return notFound(res, "Active medical card not found for given patientId");
 
     const [result] = await db.query(
       `INSERT INTO ambulance_log (patient_id, driver_id, pickup_location, departure_time, destination)
        VALUES (?, ?, ?, ?, ?)`,
-      [patientId, driverId, pickupLocation, departureTime || new Date(), destination]
+      [
+        patientId,
+        driverId,
+        pickupLocation,
+        departureTime || new Date(),
+        destination,
+      ],
     );
 
-    return created(res, { data: { logId: result.insertId } }, "Ambulance log created");
-  } catch (err) { serverError(res, err, "driver.createLog"); }
+    return created(
+      res,
+      { data: { logId: result.insertId } },
+      "Ambulance log created",
+    );
+  } catch (err) {
+    serverError(res, err, "driver.createLog");
+  }
 };
 
 // PATCH /api/driver/logs/:logId/complete
@@ -71,11 +94,13 @@ const completeTrip = async (req, res) => {
 
     await db.query(
       "UPDATE ambulance_log SET return_time = ? WHERE log_id = ? AND driver_id = ?",
-      [returnTime || new Date(), logId, driverId]
+      [returnTime || new Date(), logId, driverId],
     );
 
     return ok(res, {}, "Trip completed");
-  } catch (err) { serverError(res, err, "driver.completeTrip"); }
+  } catch (err) {
+    serverError(res, err, "driver.completeTrip");
+  }
 };
 
 // PATCH /api/driver/logs/:logId
@@ -91,11 +116,19 @@ const updateLog = async (req, res) => {
            destination = COALESCE(?, destination),
            pickup_location = COALESCE(?, pickup_location)
        WHERE log_id = ? AND driver_id = ?`,
-      [returnTime || null, destination || null, pickupLocation || null, logId, driverId]
+      [
+        returnTime || null,
+        destination || null,
+        pickupLocation || null,
+        logId,
+        driverId,
+      ],
     );
 
     return ok(res, {}, "Log updated");
-  } catch (err) { serverError(res, err, "driver.updateLog"); }
+  } catch (err) {
+    serverError(res, err, "driver.updateLog");
+  }
 };
 
 module.exports = { getLogs, getAllLogs, createLog, completeTrip, updateLog };

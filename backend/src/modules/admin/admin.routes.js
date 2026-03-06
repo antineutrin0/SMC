@@ -20,11 +20,12 @@ router.patch(
   validate(["status"]),
   ctrl.reviewApplication,
 );
-router.post(
-  "/applications/approve-card",
-  validate(["applicationId", "personId", "cardId", "password"]),
-  ctrl.approveMedicalCard,
-);
+
+// router.post(
+//   "/applications/approve-card",
+//   validate(["applicationId", "personId", "cardId", "password"]),
+//   ctrl.approveMedicalCard,
+// );
 
 // Rosters
 router.get("/rosters", ctrl.getRosters);

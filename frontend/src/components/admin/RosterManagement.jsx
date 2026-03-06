@@ -199,7 +199,7 @@ export function RosterManagement() {
                     .filter((e) => e.is_active)
                     .map((emp) => (
                       <SelectItem key={emp.employee_id} value={emp.employee_id}>
-                        {emp.full_name} – {emp.designation}
+                        {emp.fullname} – {emp.designation}
                       </SelectItem>
                     ))}
                 </SelectContent>

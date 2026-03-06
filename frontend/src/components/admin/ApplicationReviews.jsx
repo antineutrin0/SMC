@@ -49,15 +49,14 @@ export function ApplicationReviews() {
       [user?.id],
     ),
     {
-      onSuccess: (_, [, status]) => {
+      onSuccess: () => {
         refetch();
       },
     },
   );
 
-  const handleReview = async (id, status) => {
-    const result = await review(id, status);
-    if (result?.success) refetch();
+  const handleReview = (id, status) => {
+    review(id, status);
   };
 
   return (

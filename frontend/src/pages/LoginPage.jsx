@@ -44,7 +44,12 @@ export default function LoginPage() {
       const result = await apiLogin(userType, identifier.trim(), password);
 
       if (result?.success) {
-        login(result.user, result.token);
+        const userPayload = result.user;
+
+        if (userPayload.type === "Patient" && !userPayload.CardID) {
+          userPayload.CardID = identifier.trim();
+        }
+        login(userPayload, result.token);
         toast.success("Welcome back!");
         navigate("/dashboard", { replace: true });
       } else {
@@ -82,9 +87,11 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-3 text-center">
           <div className="flex items-center justify-center">
-            <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center">
-              <Stethoscope className="w-7 h-7 text-white" />
-            </div>
+            <img
+              src="https://i.ibb.co.com/RT3Wn4W9/SUST-logo.png"
+              alt="SUST-logo"
+              className="w-14 h-14 rounded-2xl  flex items-center justify-center"
+            />
           </div>
           <div>
             <CardTitle className="text-2xl">SUST Medical Centre</CardTitle>

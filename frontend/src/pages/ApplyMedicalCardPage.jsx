@@ -28,6 +28,9 @@ export default function ApplyMedicalCardPage() {
     personId: "",
     fullname: "",
     dateOfBirth: "",
+    height: "",
+    weight: "",
+    bloodgroup: "",
     contactNumber: "",
     email: "",
     type: "Student",
@@ -37,6 +40,7 @@ export default function ApplyMedicalCardPage() {
     country: "Bangladesh",
     photoUrl: "",
     idCardUrl: "",
+    password: "",
   });
 
   const handleChange = (e) => {
@@ -50,7 +54,8 @@ export default function ApplyMedicalCardPage() {
       !formData.personId ||
       !formData.fullname ||
       !formData.contactNumber ||
-      !formData.type
+      !formData.type ||
+      !formData.password
     ) {
       toast.error("Please fill in all required fields");
       return;
@@ -93,9 +98,11 @@ export default function ApplyMedicalCardPage() {
       <Card className="w-full max-w-2xl shadow-lg">
         <CardHeader className="space-y-3 text-center">
           <div className="flex items-center justify-center">
-            <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center">
-              <FileText className="w-7 h-7 text-white" />
-            </div>
+            <img
+              src="https://i.ibb.co.com/RT3Wn4W9/SUST-logo.png"
+              alt="SUST-logo"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+            />
           </div>
           <div>
             <CardTitle className="text-2xl">Medical Card Application</CardTitle>
@@ -157,6 +164,35 @@ export default function ApplyMedicalCardPage() {
                     value={formData.dateOfBirth}
                     onChange={handleChange}
                   />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="district">Height</Label>
+                    <Input
+                      id="height"
+                      placeholder="In (cm)"
+                      value={formData.height}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="weight">Weight</Label>
+                    <Input
+                      id="weight"
+                      placeholder="In (kg)"
+                      value={formData.weight}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bloodgroup">Blood Group</Label>
+                    <Input
+                      id="bloodgroup"
+                      placeholder="Ex: A+, O-"
+                      value={formData.bloodgroup}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="contactNumber">Contact Number *</Label>
@@ -235,6 +271,15 @@ export default function ApplyMedicalCardPage() {
                     id="idCardUrl"
                     placeholder="https://..."
                     value={formData.idCardUrl}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    placeholder="******"
+                    value={formData.password}
                     onChange={handleChange}
                   />
                 </div>

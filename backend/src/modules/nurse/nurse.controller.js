@@ -1,5 +1,10 @@
 const db = require("../../config/db");
-const { ok, notFound, serverError, badRequest } = require("../../utils/response");
+const {
+  ok,
+  notFound,
+  serverError,
+  badRequest,
+} = require("../../utils/response");
 
 // GET /api/nurse/tokens/pending
 const getPendingTokens = async (req, res) => {
@@ -17,10 +22,12 @@ const getPendingTokens = async (req, res) => {
        WHERE t.token_id NOT IN (
          SELECT DISTINCT token_id FROM medicine_dispensation
        )
-       ORDER BY t.issued_time ASC`
+       ORDER BY t.issued_time ASC`,
     );
     return ok(res, { data: rows });
-  } catch (err) { serverError(res, err, "nurse.getPendingTokens"); }
+  } catch (err) {
+    serverError(res, err, "nurse.getPendingTokens");
+  }
 };
 
 // GET /api/nurse/prescription/:visitId
@@ -32,14 +39,14 @@ const getPrescription = async (req, res) => {
       `SELECT pr.prescription_id, pr.symptoms, pr.advice, pr.created_at,
               ov.card_id, ov.visit_date,
               p.fullname  AS patient_name,
-              e.full_name AS doctor_name
+              e.fullname AS doctor_name
        FROM prescription pr
        JOIN outdoor_visit ov ON pr.visit_id = ov.visit_id
        JOIN MedicalCard mc   ON ov.card_id  = mc.CardID
        JOIN Person p         ON mc.PersonID = p.person_id
        JOIN Employee e       ON ov.doctor_id = e.employee_id
        WHERE pr.visit_id = ?`,
-      [visitId]
+      [visitId],
     );
     if (!rows.length) return notFound(res, "Prescription not found");
 
@@ -53,11 +60,13 @@ const getPrescription = async (req, res) => {
        LEFT JOIN medicine_inventory mi ON m.medicine_id = mi.medicine_id
        WHERE med.prescription_id = ?
        GROUP BY med.medicine_id`,
-      [rows[0].prescription_id]
+      [rows[0].prescription_id],
     );
 
     return ok(res, { data: { ...rows[0], medications: meds } });
-  } catch (err) { serverError(res, err, "nurse.getPrescription"); }
+  } catch (err) {
+    serverError(res, err, "nurse.getPrescription");
+  }
 };
 
 // POST /api/nurse/dispense
@@ -77,7 +86,7 @@ const dispenseMedicine = async (req, res) => {
       await db.query(
         `INSERT INTO medicine_dispensation (token_id, medicine_id, quantity_dispensed, dispensed_by, dispensed_time)
          VALUES (?, ?, ?, ?, NOW())`,
-        [tokenId, med.medicineId, med.quantity, employeeId]
+        [tokenId, med.medicineId, med.quantity, employeeId],
       );
 
       // Deduct from inventory (FIFO by expiry)
@@ -87,24 +96,26 @@ const dispenseMedicine = async (req, res) => {
          WHERE medicine_id = ? AND quantity > 0
          ORDER BY exp_date ASC
          LIMIT 1`,
-        [med.quantity, med.medicineId]
+        [med.quantity, med.medicineId],
       );
 
       // Record transaction
       const [[{ total }]] = await db.query(
         "SELECT COALESCE(SUM(quantity), 0) AS total FROM medicine_inventory WHERE medicine_id = ?",
-        [med.medicineId]
+        [med.medicineId],
       );
 
       await db.query(
         `INSERT INTO medicine_transaction (medicine_id, transaction_type, quantity, made_by, reference_type, reference, balance_after)
          VALUES (?, 'OUT', ?, ?, 'Substore', ?, ?)`,
-        [med.medicineId, med.quantity, employeeId, String(tokenId), total]
+        [med.medicineId, med.quantity, employeeId, String(tokenId), total],
       );
     }
 
     return ok(res, {}, "Medicine dispensed successfully");
-  } catch (err) { serverError(res, err, "nurse.dispenseMedicine"); }
+  } catch (err) {
+    serverError(res, err, "nurse.dispenseMedicine");
+  }
 };
 
 // GET /api/nurse/:nurseId/history
@@ -125,10 +136,17 @@ const getDispensationHistory = async (req, res) => {
        WHERE md.dispensed_by = ?
        ORDER BY md.dispensed_time DESC
        LIMIT 100`,
-      [nurseId]
+      [nurseId],
     );
     return ok(res, { data: rows });
-  } catch (err) { serverError(res, err, "nurse.getDispensationHistory"); }
+  } catch (err) {
+    serverError(res, err, "nurse.getDispensationHistory");
+  }
 };
 
-module.exports = { getPendingTokens, getPrescription, dispenseMedicine, getDispensationHistory };
+module.exports = {
+  getPendingTokens,
+  getPrescription,
+  dispenseMedicine,
+  getDispensationHistory,
+};

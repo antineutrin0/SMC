@@ -32,12 +32,15 @@ const login = async (req, res) => {
         `SELECT mc.*, p.fullname
          FROM MedicalCard mc
          JOIN Person p ON mc.PersonID = p.person_id
-         WHERE mc.CardID = ? AND mc.Status = 'Active'`,
+         WHERE mc.CardID = ?`,
         [identifier],
       );
 
       if (rows.length === 0) return unauthorized(res, "user not found");
-
+      if (rows[0].Status === "Inactive")
+        return unauthorized(res, "user is not active");
+      if (rows[0].Status === "Expired")
+        return unauthorized(res, "user has expired");
       const record = rows[0];
       const match = await bcrypt.compare(password, record.PasswordHash || "");
       if (!match) return unauthorized(res, "Invalid credentials");
@@ -71,7 +74,7 @@ const login = async (req, res) => {
 
       user = record;
       role = designation;
-      name = record.full_name;
+      name = record.fullname;
     }
 
     // Issue JWT
@@ -122,7 +125,7 @@ const getMe = async (req, res) => {
       userData = rows[0] || null;
     } else {
       const [rows] = await db.query(
-        `SELECT employee_id, full_name, designation, specialization, contact_no, photo_url, is_active
+        `SELECT employee_id, fullname, designation, specialization, contact_no, photo_url, is_active
          FROM Employee WHERE employee_id = ?`,
         [id],
       );

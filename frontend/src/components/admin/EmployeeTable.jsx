@@ -56,7 +56,7 @@ export function EmployeeTable() {
                       {emp.employee_id}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {emp.full_name}
+                      {emp.fullname}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{emp.designation}</Badge>

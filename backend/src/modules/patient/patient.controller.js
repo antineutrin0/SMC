@@ -37,7 +37,7 @@ const getVisits = async (req, res) => {
 
     const [rows] = await db.query(
       `SELECT ov.visit_id, ov.visit_date,
-              e.full_name AS doctor_name,
+              e.fullname AS doctor_name,
               pr.symptoms, pr.advice
        FROM outdoor_visit ov
        LEFT JOIN Employee e    ON ov.doctor_id  = e.employee_id
@@ -59,6 +59,9 @@ const applyForMedicalCard = async (req, res) => {
       personId,
       fullname,
       dateOfBirth,
+      height,
+      weight,
+      bloodgroup,
       contactNumber,
       email,
       upazilla,
@@ -68,14 +71,17 @@ const applyForMedicalCard = async (req, res) => {
       type,
       photoUrl,
       idCardUrl,
+      password,
     } = req.body;
 
-    if (!personId || !fullname || !contactNumber || !type) {
+    if (!personId || !fullname || !contactNumber || !type || !password) {
       return badRequest(
         res,
-        "personId, fullname, contactNumber and type are required",
+        "personId, fullname, contactNumber, type and password are required",
       );
     }
+
+    const passwordhash = await bcrypt.hash(password, 10);
 
     // Upsert person
     await db.query(
@@ -98,7 +104,11 @@ const applyForMedicalCard = async (req, res) => {
         type,
       ],
     );
-
+    await db.query(
+      `INSERT INTO MedicalCard (CardID, IssueDate, ExpiryDate, Status, PersonID, Height_cm, Weight_kg, BloodGroup, PasswordHash)
+       VALUES (?, now(), DATE_ADD(now(), INTERVAL 4 YEAR), 'Inactive', ?,?, ?, ?, ?)`,
+      [personId, personId, height, weight, bloodgroup, passwordhash],
+    );
     const [result] = await db.query(
       `INSERT INTO MedicalCardApplication
          (ApplicationDate, ApplicationStatus, PhotoUrl, IdCardUrl, PersonID)
@@ -122,7 +132,7 @@ const getFirstAidRequests = async (req, res) => {
     const cardId = req.params.patientId || req.user.id;
 
     const [rows] = await db.query(
-      `SELECT far.*, e.full_name AS approved_by_name
+      `SELECT far.*, e.fullname AS approved_by_name
        FROM first_aid_request far
        LEFT JOIN employee e ON far.approved_by = e.employee_id
        WHERE far.requested_by = ?

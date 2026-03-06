@@ -119,7 +119,7 @@ function DashboardHome() {
     case "Driver":
       return <DriverLogsPage />;
     case "Patient":
-      return <Navigate to="profile" replace />;
+      return <PatientProfilePage />;
     default:
       return <Navigate to="/" replace />;
   }
@@ -186,12 +186,14 @@ function AppRoutes() {
               path="transactions"
               element={<PharmacistTransactionsPage />}
             />
-            <Route path="firstaid" element={<PharmacistFirstAidPage />} />
+            <Route
+              path="firstaidrequest"
+              element={<PharmacistFirstAidPage />}
+            />
           </Route>
 
           {/* Patient */}
           <Route element={<ProtectedRoute allowedRoles={["Patient"]} />}>
-            <Route path="profile" element={<PatientProfilePage />} />
             <Route path="visits" element={<PatientVisitsPage />} />
             <Route path="firstaid" element={<PatientFirstAidPage />} />
           </Route>
