@@ -1,4 +1,5 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt");
 
@@ -18,7 +19,7 @@ async function seed() {
     const EMP_PASS = await bcrypt.hash("Password@123", 10);
     const PATIENT_PASS = await bcrypt.hash("Patient@123", 10);
 
-    // // ─── Employees ────────────────────────────────────────────────
+    // // ─── Employees ─────────────────ss───────────────────────────────
     const employees = [
       [
         "ADM001",
