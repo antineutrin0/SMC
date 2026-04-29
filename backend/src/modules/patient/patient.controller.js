@@ -165,13 +165,13 @@ const createFirstAidRequest = async (req, res) => {
 
     if (!tripDetails) return badRequest(res, "tripDetails is required");
 
-    const requestId = "FAR" + Date.now();
-
-    await db.query(
-      `INSERT INTO first_aid_request (request_id, requested_by, trip_details, document_url, request_date, statue)
-       VALUES (?, ?, ?, ?, CURDATE(), 'PENDING')`,
-      [requestId, cardId, tripDetails, documentUrl || null],
+    const [result] = await db.query(
+      `INSERT INTO first_aid_request (requested_by, trip_details, document_url, request_date, statue)
+       VALUES (?, ?, ?, CURDATE(), 'PENDING')`,
+      [cardId, tripDetails, documentUrl || null],
     );
+
+    const requestId = result.insertId;
 
     if (Array.isArray(items) && items.length > 0) {
       for (const item of items) {

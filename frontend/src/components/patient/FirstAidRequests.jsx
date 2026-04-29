@@ -47,7 +47,11 @@ export function FirstAidRequests() {
   const [tripDetails, setTripDetails] = useState("");
   const [selected, setSelected] = useState([]);
 
-  const { data: req, loading } = useFetch(
+  const {
+    data: req,
+    loading,
+    refetch,
+  } = useFetch(
     useCallback(() => getFirstAidRequests(user?.CardID), [user?.CardID]),
     [user?.CardID],
   );
