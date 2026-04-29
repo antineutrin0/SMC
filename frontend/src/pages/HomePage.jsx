@@ -47,9 +47,9 @@ import { LoadingSpinner, EmptyState } from "../components/shared";
 const ICON_MAP = { Stethoscope, Ambulance, Pill, Backpack };
 
 const backgroundImages = [
-  "https://www.sust.edu/public/uploads/website/OfficeRotatingBanner/43_6718b2837832e.jpg",
-  "https://www.sust.edu/public/uploads/website/OfficeRotatingBanner/43_6718b28378630.jpg",
-  "https://www.sust.edu/public/uploads/website/OfficeRotatingBanner/43_6718b283784ec.jpg",
+  "https://i.ibb.co.com/m5Xd5D6m/43-6718b283784ec.jpg",
+  "https://i.ibb.co.com/zH5jSmWP/43-6718b28378630.jpg",
+  "https://i.ibb.co.com/TxwJTbCs/43-6718b2837832e.jpg"
 ];
 
 export default function HomePage() {
