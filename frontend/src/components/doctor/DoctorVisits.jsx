@@ -35,7 +35,8 @@ import {
 import { Badge } from "../ui/badge";
 import { Plus, Trash2, Calendar } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useFetch, useMutation, useForm, useDisclosure } from "../../hooks";
+import { useFetch, useMutation, useForm, useDisclosure} from "../../hooks";
+import { useEffect } from "react";
 import {
   getDoctorVisits,
   createVisit,
@@ -149,6 +150,7 @@ export function DoctorVisits() {
     useCallback(() => getDoctorVisits(user?.employee_id), [user?.employee_id]),
     [user?.employee_id],
   );
+
   const visits = visitsres?.data || [];
   const { data: medicineres } = useFetch(getMedicines);
   const medicines = medicineres?.data || [];

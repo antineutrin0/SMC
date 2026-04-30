@@ -10,8 +10,8 @@ router.use(verifyToken, requireRole("Admin"));
 router.get("/stats", ctrl.getDashboardStats);
 
 // employees
-router.get("/employees", ctrl.getemployees);
-router.get("/employees/:employeeId", ctrl.getemployeeById);
+router.get("/employees", ctrl.getEmployees);
+router.get("/employees/:employeeId", ctrl.getEmployeeById);
 
 // Medical Card Applications
 router.get("/applications", ctrl.getApplications);

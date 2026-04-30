@@ -20,7 +20,7 @@ const getRoster = async (req, res) => {
   }
 };
 
-const getemployees = async (req, res) => {
+const getEmployees = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT employee_id, fullname, designation, specialization, contact_no, photo_url
@@ -29,7 +29,7 @@ const getemployees = async (req, res) => {
     );
     return ok(res, { data: rows });
   } catch (err) {
-    serverError(res, err, "public.getemployees");
+    serverError(res, err, "public.getEmployees");
   }
 };
 
@@ -81,4 +81,4 @@ const getInfo = async (_req, res) => {
   return ok(res, { data: info });
 };
 
-module.exports = { getRoster, getemployees, getServices, getInfo };
+module.exports = { getRoster, getEmployees, getServices, getInfo };
