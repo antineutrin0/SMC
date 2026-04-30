@@ -263,7 +263,7 @@ export function AmbulanceLogs() {
             <div className="space-y-1.5">
               <Label>Departure Time</Label>
               <Input
-                type="datetime-local"
+                type="TIMESTAMP-local"
                 value={form.departureTime}
                 onChange={(e) => setValue("departureTime", e.target.value)}
               />
