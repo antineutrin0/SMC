@@ -39,7 +39,7 @@ const getAllLogs = async (req, res) => {
        FROM ambulance_log al
        JOIN MedicalCard mc ON al.patient_id = mc.CardID
        JOIN Person p        ON mc.PersonID  = p.person_id
-       LEFT JOIN Employee e ON al.driver_id = e.employee_id
+       LEFT JOIN employee e ON al.driver_id = e.employee_id
        ORDER BY al.departure_time DESC
        LIMIT 100`,
     );

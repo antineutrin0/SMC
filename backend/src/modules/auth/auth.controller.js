@@ -62,7 +62,7 @@ const login = async (req, res) => {
       if (!designation) return badRequest(res, "Invalid userType");
 
       const [rows] = await db.query(
-        `SELECT * FROM Employee WHERE employee_id = ? AND designation = ? AND is_active = 1`,
+        `SELECT * FROM employee WHERE employee_id = ? AND designation = ? AND is_active = 1`,
         [identifier, designation],
       );
 
@@ -126,7 +126,7 @@ const getMe = async (req, res) => {
     } else {
       const [rows] = await db.query(
         `SELECT employee_id, fullname, designation, specialization, contact_no, photo_url, is_active
-         FROM Employee WHERE employee_id = ?`,
+         FROM employee WHERE employee_id = ?`,
         [id],
       );
       userData = rows[0] || null;

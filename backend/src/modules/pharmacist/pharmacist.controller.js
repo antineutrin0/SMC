@@ -121,7 +121,7 @@ const getTransactions = async (req, res) => {
       `SELECT mt.*, m.name AS medicine_name, e.fullname AS employee_name
        FROM medicine_transaction mt
        JOIN medicine  m ON mt.medicine_id = m.medicine_id
-       JOIN Employee  e ON mt.made_by     = e.employee_id
+       JOIN employee  e ON mt.made_by     = e.employee_id
        ORDER BY mt.transaction_date DESC
        LIMIT 100`,
     );
@@ -142,7 +142,7 @@ const getFirstAidRequests = async (req, res) => {
        FROM first_aid_request far
        JOIN MedicalCard mc ON far.requested_by = mc.CardID
        JOIN Person p       ON mc.PersonID      = p.person_id
-       LEFT JOIN Employee e ON far.approved_by = e.employee_id
+       LEFT JOIN employee e ON far.approved_by = e.employee_id
        ORDER BY far.request_date DESC`,
     );
 
@@ -211,7 +211,7 @@ const getRequisitions = async (req, res) => {
     const [rows] = await db.query(
       `SELECT sr.*, e.fullname AS requested_by_name
        FROM substore_requisition sr
-       JOIN Employee e ON sr.made_by = e.employee_id
+       JOIN employee e ON sr.made_by = e.employee_id
        ORDER BY sr.requisition_id DESC`,
     );
     for (const row of rows) {

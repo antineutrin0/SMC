@@ -9,9 +9,9 @@ router.use(verifyToken, requireRole("Admin"));
 // Dashboard
 router.get("/stats", ctrl.getDashboardStats);
 
-// Employees
-router.get("/employees", ctrl.getEmployees);
-router.get("/employees/:employeeId", ctrl.getEmployeeById);
+// employees
+router.get("/employees", ctrl.getemployees);
+router.get("/employees/:employeeId", ctrl.getemployeeById);
 
 // Medical Card Applications
 router.get("/applications", ctrl.getApplications);

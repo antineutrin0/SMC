@@ -44,7 +44,7 @@ const getPrescription = async (req, res) => {
        JOIN outdoor_visit ov ON pr.visit_id = ov.visit_id
        JOIN MedicalCard mc   ON ov.card_id  = mc.CardID
        JOIN Person p         ON mc.PersonID = p.person_id
-       JOIN Employee e       ON ov.doctor_id = e.employee_id
+       JOIN employee e       ON ov.doctor_id = e.employee_id
        WHERE pr.visit_id = ?`,
       [visitId],
     );

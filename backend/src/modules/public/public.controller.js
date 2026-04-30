@@ -8,7 +8,7 @@ const getRoster = async (req, res) => {
               r.shift_start, r.shift_end, r.status,
               e.fullname AS employee_name, e.designation
        FROM roster r
-       JOIN Employee e ON r.employee_id = e.employee_id
+       JOIN employee e ON r.employee_id = e.employee_id
        WHERE r.status = 'Approved'
          AND r.start_date <= CURDATE()
          AND r.end_date   >= CURDATE()
@@ -20,16 +20,16 @@ const getRoster = async (req, res) => {
   }
 };
 
-const getEmployees = async (req, res) => {
+const getemployees = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT employee_id, fullname, designation, specialization, contact_no, photo_url
-       FROM Employee WHERE is_active = 1
+       FROM employee WHERE is_active = 1
        ORDER BY designation, fullname`,
     );
     return ok(res, { data: rows });
   } catch (err) {
-    serverError(res, err, "public.getEmployees");
+    serverError(res, err, "public.getemployees");
   }
 };
 
@@ -81,4 +81,4 @@ const getInfo = async (_req, res) => {
   return ok(res, { data: info });
 };
 
-module.exports = { getRoster, getEmployees, getServices, getInfo };
+module.exports = { getRoster, getemployees, getServices, getInfo };

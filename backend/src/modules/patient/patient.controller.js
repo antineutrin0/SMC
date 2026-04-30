@@ -40,7 +40,7 @@ const getVisits = async (req, res) => {
               e.fullname AS doctor_name,
               pr.symptoms, pr.advice
        FROM outdoor_visit ov
-       LEFT JOIN Employee e    ON ov.doctor_id  = e.employee_id
+       LEFT JOIN employee e    ON ov.doctor_id  = e.employee_id
        LEFT JOIN prescription pr ON ov.visit_id = pr.visit_id
        WHERE ov.card_id = ?
        ORDER BY ov.visit_date DESC`,
