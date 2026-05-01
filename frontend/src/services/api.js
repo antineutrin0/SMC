@@ -86,6 +86,8 @@ export const createFirstAidRequest = (data) => post("/patient/first-aid", data);
 export const applyForMedicalCard = (data) => post("/patient/apply", data);
 export const getVisitPrescription = (visitId) =>
   apiClient.get(`/visits/${visitId}/prescriptions`);
+export const getFirstAidRequestDetail = (requestId) =>
+  apiClient.get(`/first-aid/requests/${requestId}`);
 
 // ─── Nurse ───────────────────────────────────────────────────
 

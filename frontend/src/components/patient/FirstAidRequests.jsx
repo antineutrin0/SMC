@@ -39,19 +39,23 @@ import {
   EmptyState,
   TableWrapper,
   getStatusVariant,
+  FirstAidRequestDialog,           
 } from "../shared";
 
 export function FirstAidRequests() {
   const { user } = useAuth();
-  const { isOpen, open, close } = useDisclosure();
+
+  // ── Dialog states ────────────────────────────────────────────
+  const { isOpen, open, close } = useDisclosure();       // create dialog
+  const viewDisclosure = useDisclosure();                // view detail dialog
+  const [selectedRequest, setSelectedRequest] = useState(null);
+
+  // ── Form state ───────────────────────────────────────────────
   const [tripDetails, setTripDetails] = useState("");
   const [selected, setSelected] = useState([]);
 
-  const {
-    data: req,
-    loading,
-    refetch,
-  } = useFetch(
+  // ── Data fetching ────────────────────────────────────────────
+  const { data: req, loading, refetch } = useFetch(
     useCallback(() => getFirstAidRequests(user?.CardID), [user?.CardID]),
     [user?.CardID],
   );
@@ -60,6 +64,7 @@ export function FirstAidRequests() {
   const { data } = useFetch(getMedicines);
   const medicines = data?.data || [];
 
+  // ── Mutation ─────────────────────────────────────────────────
   const { mutate: submit, loading: submitting } = useMutation(
     createFirstAidRequest,
     {
@@ -72,6 +77,12 @@ export function FirstAidRequests() {
       },
     },
   );
+
+  // ── Handlers ─────────────────────────────────────────────────
+  const handleRowClick = (request) => {
+    setSelectedRequest(request);
+    viewDisclosure.open();
+  };
 
   const toggleMedicine = (med) => {
     setSelected((prev) => {
@@ -101,13 +112,14 @@ export function FirstAidRequests() {
 
   return (
     <>
+      {/* ── Requests Table ──────────────────────────────────── */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <CardTitle>First Aid Requests</CardTitle>
               <CardDescription>
-                Medicine requests for study tours
+                Medicine requests for study tours. Click a row to view details.
               </CardDescription>
             </div>
             <Button onClick={open} size="sm">
@@ -137,7 +149,11 @@ export function FirstAidRequests() {
                 </TableHeader>
                 <TableBody>
                   {requests.map((r) => (
-                    <TableRow key={r.request_id}>
+                    <TableRow
+                      key={r.request_id}
+                      className="cursor-pointer hover:bg-muted/60 transition-colors"
+                      onClick={() => handleRowClick(r)}
+                    >
                       <TableCell className="font-mono text-xs">
                         #{r.request_id}
                       </TableCell>
@@ -179,6 +195,7 @@ export function FirstAidRequests() {
         </CardContent>
       </Card>
 
+      {/* ── Create Request Dialog ────────────────────────────── */}
       <Dialog open={isOpen} onOpenChange={(v) => !v && close()}>
         <DialogContent className="max-w-lg w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -270,6 +287,16 @@ export function FirstAidRequests() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── View Request Detail Dialog (read-only) ───────────── */}
+      <FirstAidRequestDialog
+        request={selectedRequest}
+        open={viewDisclosure.isOpen}
+        onClose={() => {
+          viewDisclosure.close();
+          setSelectedRequest(null);
+        }}
+      />
     </>
   );
 }

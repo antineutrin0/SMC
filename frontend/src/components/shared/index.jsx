@@ -121,3 +121,4 @@ export function StatChip({ icon, label, value }) {
 }
 
 export { NumericInput } from "./NumericInput";
+export { FirstAidRequestDialog } from "./FirstAidRequestDialog";
