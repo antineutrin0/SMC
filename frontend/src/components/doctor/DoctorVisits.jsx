@@ -36,7 +36,6 @@ import { Badge } from "../ui/badge";
 import { Plus, Trash2, Calendar } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch, useMutation, useForm, useDisclosure } from "../../hooks";
-import { useEffect } from "react";
 import {
   getDoctorVisits,
   createVisit,
@@ -44,7 +43,9 @@ import {
   getMedicines,
 } from "../../services/api";
 import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
+import { PrescriptionDialog } from "../shared/PrescriptionDialog";
 
+// ── Constants ─────────────────────────────────────────────────
 const EMPTY_MED = {
   medicineId: "",
   dosageAmount: "",
@@ -53,6 +54,7 @@ const EMPTY_MED = {
   frequency: "",
 };
 
+// ── MedicationRow ─────────────────────────────────────────────
 function MedicationRow({ med, index, medicines, onChange, onRemove }) {
   return (
     <div className="border rounded-lg p-3 space-y-3 bg-gray-50">
@@ -135,39 +137,43 @@ function MedicationRow({ med, index, medicines, onChange, onRemove }) {
   );
 }
 
+// ── DoctorVisits ──────────────────────────────────────────────
 export function DoctorVisits() {
   const { user } = useAuth();
-  const visitModal = useDisclosure();
-  const prescModal = useDisclosure();
-  const [selectedVisit, setSelectedVisit] = useState(null);
+
+  // Modal states
+  const visitModal = useDisclosure();   // New visit dialog
+  const prescModal = useDisclosure();   // Create prescription dialog
+  const viewModal = useDisclosure();    // View prescription dialog (read-only)
+
+  // Selected visit for each dialog — kept separate to avoid conflicts
+  const [rxVisit, setRxVisit] = useState(null);       // for create Rx
+  const [viewVisit, setViewVisit] = useState(null);   // for view Rx
+
   const [medications, setMedications] = useState([]);
-  console.log("User", user);
-const {
-  data: visitsres,
-  loading,
-  refetch,
-} = useFetch(
-  useCallback(() => {
-    if (!user?.id) return Promise.resolve(null);
-    return getDoctorVisits(user.id);
-  }, [user?.id])
-);
 
-  const visits = visitsres?.data || [];
-  const { data: medicineres } = useFetch(getMedicines);
-  const medicines = medicineres?.data || [];
+  // ── Data fetching ───────────────────────────────────────────
+  const { data: visitsRes, loading, refetch } = useFetch(
+    useCallback(() => {
+      if (!user?.id) return Promise.resolve(null);
+      return getDoctorVisits(user.id);
+    }, [user?.id]),
+  );
+  const visits = visitsRes?.data || [];
 
-  const {
-    values: visitForm,
-    setValue: setVF,
-    reset: resetVF,
-  } = useForm({ cardId: "" });
-  const {
-    values: rxForm,
-    setValue: setRx,
-    reset: resetRx,
-  } = useForm({ symptoms: "", advice: "" });
+  const { data: medicineRes } = useFetch(getMedicines);
+  const medicines = medicineRes?.data || [];
 
+  // ── Forms ───────────────────────────────────────────────────
+  const { values: visitForm, setValue: setVF, reset: resetVF } = useForm({
+    cardId: "",
+  });
+  const { values: rxForm, setValue: setRx, reset: resetRx } = useForm({
+    symptoms: "",
+    advice: "",
+  });
+
+  // ── Mutations ───────────────────────────────────────────────
   const { mutate: submitVisit, loading: visitLoading } = useMutation(
     createVisit,
     {
@@ -175,7 +181,8 @@ const {
         if (result?.success) {
           visitModal.close();
           resetVF();
-          setSelectedVisit({
+          // Immediately open the prescription dialog for the new visit
+          setRxVisit({
             visit_id: result.data.visitId,
             card_id: visitForm.cardId,
           });
@@ -185,7 +192,7 @@ const {
       },
     },
   );
-  
+
   const { mutate: submitRx, loading: rxLoading } = useMutation(
     createPrescription,
     {
@@ -194,12 +201,13 @@ const {
         prescModal.close();
         resetRx();
         setMedications([]);
-        setSelectedVisit(null);
+        setRxVisit(null);
         refetch();
       },
     },
   );
 
+  // ── Handlers ────────────────────────────────────────────────
   const handleVisitSubmit = (e) => {
     e.preventDefault();
     submitVisit({ cardId: visitForm.cardId, doctorId: user.id });
@@ -208,7 +216,7 @@ const {
   const handleRxSubmit = (e) => {
     e.preventDefault();
     submitRx({
-      visitId: selectedVisit.visit_id,
+      visitId: rxVisit.visit_id,
       symptoms: rxForm.symptoms,
       advice: rxForm.advice,
       medications: medications.map((m) => ({
@@ -221,12 +229,32 @@ const {
     });
   };
 
+  const handleAddRx = (visit) => {
+    setRxVisit(visit);
+    prescModal.open();
+  };
+
+  // Row click — only opens view dialog for completed visits
+  const handleRowClick = (visit) => {
+    if (!visit.symptoms) return; // incomplete visits have no prescription to view
+    setViewVisit(visit);
+    viewModal.open();
+  };
+
   const updateMed = (i, field, val) => {
     setMedications((prev) =>
       prev.map((m, idx) => (idx === i ? { ...m, [field]: val } : m)),
     );
   };
 
+  const closeRxModal = () => {
+    prescModal.close();
+    resetRx();
+    setMedications([]);
+    setRxVisit(null);
+  };
+
+  // ── Render ───────────────────────────────────────────────────
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -237,10 +265,14 @@ const {
         </Button>
       </div>
 
+      {/* ── Consultation History Table ──────────────────────── */}
       <Card>
         <CardHeader>
           <CardTitle>Consultation History</CardTitle>
-          <CardDescription>All patient visits you have handled</CardDescription>
+          <CardDescription>
+            All patient visits you have handled. Click a completed row to view
+            prescription.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -264,7 +296,16 @@ const {
                 </TableHeader>
                 <TableBody>
                   {visits.map((v) => (
-                    <TableRow key={v.visit_id}>
+                    <TableRow
+                      key={v.visit_id}
+                      // Only completed visits are clickable
+                      className={
+                        v.symptoms
+                          ? "cursor-pointer hover:bg-muted/60 transition-colors"
+                          : undefined
+                      }
+                      onClick={() => handleRowClick(v)}
+                    >
                       <TableCell className="text-sm whitespace-nowrap">
                         {new Date(v.visit_date).toLocaleDateString()}
                       </TableCell>
@@ -281,19 +322,19 @@ const {
                         {v.advice || "—"}
                       </TableCell>
                       <TableCell>
-                        {!v.symptoms && (
+                        {!v.symptoms ? (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
-                              setSelectedVisit(v);
-                              prescModal.open();
+                            // Stop propagation so row click doesn't fire
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddRx(v);
                             }}
                           >
                             Add Rx
                           </Button>
-                        )}
-                        {v.symptoms && (
+                        ) : (
                           <Badge variant="outline" className="text-xs">
                             Done
                           </Badge>
@@ -315,7 +356,7 @@ const {
         </CardContent>
       </Card>
 
-      {/* New Visit Dialog */}
+      {/* ── New Visit Dialog ────────────────────────────────── */}
       <Dialog
         open={visitModal.isOpen}
         onOpenChange={(v) => !v && visitModal.close()}
@@ -339,11 +380,7 @@ const {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={visitModal.close}
-              >
+              <Button type="button" variant="outline" onClick={visitModal.close}>
                 Cancel
               </Button>
               <Button type="submit" disabled={visitLoading}>
@@ -354,16 +391,13 @@ const {
         </DialogContent>
       </Dialog>
 
-      {/* Prescription Dialog */}
-      <Dialog
-        open={prescModal.isOpen}
-        onOpenChange={(v) => !v && prescModal.close()}
-      >
+      {/* ── Create Prescription Dialog ──────────────────────── */}
+      <Dialog open={prescModal.isOpen} onOpenChange={(v) => !v && closeRxModal()}>
         <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Prescription</DialogTitle>
             <DialogDescription>
-              Patient: {selectedVisit?.patient_name || selectedVisit?.card_id}
+              Patient: {rxVisit?.patient_name || rxVisit?.card_id}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleRxSubmit} className="space-y-4">
@@ -422,16 +456,7 @@ const {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  prescModal.close();
-                  resetRx();
-                  setMedications([]);
-                  setSelectedVisit(null);
-                }}
-              >
+              <Button type="button" variant="outline" onClick={closeRxModal}>
                 Cancel
               </Button>
               <Button type="submit" disabled={rxLoading}>
@@ -441,6 +466,16 @@ const {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── View Prescription Dialog (read-only) ────────────── */}
+      <PrescriptionDialog
+        visit={viewVisit}
+        open={viewModal.isOpen}
+        onClose={() => {
+          viewModal.close();
+          setViewVisit(null);
+        }}
+      />
     </>
   );
 }
