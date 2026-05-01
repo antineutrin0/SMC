@@ -106,7 +106,7 @@ const dispenseMedicine = async (req, res) => {
       );
 
       await db.query(
-        `INSERT INTO medicine_transaction (medicine_id, transaction_type, quantity, made_by, reference_type, reference, balance_after)
+        `INSERT INTO medicine_transaction (medicine_id, transaction_type, quantity, made_by, reference_type, reference_id, balance_after)
          VALUES (?, 'OUT', ?, ?, 'Substore', ?, ?)`,
         [med.medicineId, med.quantity, employeeId, String(tokenId), total],
       );
