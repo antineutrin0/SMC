@@ -54,10 +54,10 @@ function calcDuration(dep, ret) {
 export function AmbulanceLogs() {
   const { user } = useAuth();
   const { isOpen, open, close } = useDisclosure();
-
+  console.log("user", user);
   const { data, loading, refetch } = useFetch(
-    useCallback(() => getAmbulanceLogs(user?.employee_id), [user?.employee_id]),
-    [user?.employee_id],
+    useCallback(() => getAmbulanceLogs(user?.id), [user?.id]),
+    [user?.id],
   );
   const logs = data?.data ?? [];
 
