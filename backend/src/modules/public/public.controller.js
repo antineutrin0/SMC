@@ -20,7 +20,7 @@ const getRoster = async (req, res) => {
   }
 };
 
-const getemployees = async (req, res) => {
+const getEmployees = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT employee_id, fullname, designation, specialization, contact_no, photo_url
