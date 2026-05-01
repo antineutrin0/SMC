@@ -15,7 +15,7 @@ const getDashboardStats = async (req, res) => {
       "SELECT COUNT(*) AS totalPatients FROM MedicalCard",
     );
     const [[{ totalEmployees }]] = await db.query(
-      "SELECT COUNT(*) AS totalEmployees FROM Employee WHERE is_active = 1",
+      "SELECT COUNT(*) AS totalEmployees FROM employee WHERE is_active = 1",
     );
     const [[{ pendingApplications }]] = await db.query(
       "SELECT COUNT(*) AS pendingApplications FROM MedicalCardApplication WHERE ApplicationStatus = 'Pending'",
@@ -36,7 +36,7 @@ const getDashboardStats = async (req, res) => {
 const getEmployees = async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT employee_id, fullname, designation, specialization, license_no, contact_no, photo_url, is_active FROM Employee ORDER BY designation, fullname",
+      "SELECT employee_id, fullname, designation, specialization, license_no, contact_no, photo_url, is_active FROM employee ORDER BY designation, fullname",
     );
     return ok(res, { data: rows });
   } catch (err) {
@@ -48,7 +48,7 @@ const getEmployeeById = async (req, res) => {
   try {
     const { employeeId } = req.params;
     const [rows] = await db.query(
-      "SELECT employee_id, fullname, designation, specialization, license_no, contact_no, photo_url, is_active FROM Employee WHERE employee_id = ?",
+      "SELECT employee_id, fullname, designation, specialization, license_no, contact_no, photo_url, is_active FROM employee WHERE employee_id = ?",
       [employeeId],
     );
     if (!rows.length) return notFound(res, "Employee not found");
@@ -90,8 +90,8 @@ const getApplications = async (req, res) => {
               rv.fullname AS reviewer_name, ap.fullname AS approver_name
        FROM MedicalCardApplication mca
        JOIN Person p   ON mca.PersonID   = p.person_id
-       LEFT JOIN Employee rv ON mca.ReviewerId = rv.employee_id
-       LEFT JOIN Employee ap ON mca.ApprovedBy = ap.employee_id
+       LEFT JOIN employee rv ON mca.ReviewerId = rv.employee_id
+       LEFT JOIN employee ap ON mca.ApprovedBy = ap.employee_id
        ORDER BY mca.ApplicationDate DESC`,
     );
     return ok(res, { data: rows });
@@ -167,9 +167,9 @@ const getRosters = async (req, res) => {
               cr.fullname AS created_by_name,
               ap.fullname AS approved_by_name
        FROM roster r
-       JOIN Employee e  ON r.employee_id = e.employee_id
-       LEFT JOIN Employee cr ON r.created_by  = cr.employee_id
-       LEFT JOIN Employee ap ON r.approved_by = ap.employee_id
+       JOIN employee e  ON r.employee_id = e.employee_id
+       LEFT JOIN employee cr ON r.created_by  = cr.employee_id
+       LEFT JOIN employee ap ON r.approved_by = ap.employee_id
        ORDER BY r.start_date DESC`,
     );
     return ok(res, { data: rows });
