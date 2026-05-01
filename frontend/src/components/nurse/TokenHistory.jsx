@@ -32,9 +32,9 @@ export function TokenHistory() {
 //   console.log(user);
 //   const { data, loading } = useFetch(
 //       useCallback(() => {
-//         if (!user?.employee_id) return Promise.resolve(null);
-//         return getNurseHistory(user?.employee_id);
-//       }, [user?.employee_id])
+//         if (!user?.id) return Promise.resolve(null);
+//         return getNurseHistory(user?.id);
+//       }, [user?.id])
 // );
 
 console.log("User", user);

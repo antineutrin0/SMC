@@ -42,7 +42,7 @@ import {
   createPrescription,
   getMedicines,
 } from "../../services/api";
-import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
+import { LoadingSpinner, EmptyState, TableWrapper, NumericInput } from "../shared";
 import { PrescriptionDialog } from "../shared/PrescriptionDialog";
 
 // ── Constants ─────────────────────────────────────────────────
@@ -50,14 +50,15 @@ const EMPTY_MED = {
   medicineId: "",
   dosageAmount: "",
   dosageUnit: "mg",
-  durationDay: "",
-  frequency: "",
+  durationDay: 1,   // start at 1, never below 1
+  frequency: 1,     // start at 1, never below 1
 };
 
 // ── MedicationRow ─────────────────────────────────────────────
 function MedicationRow({ med, index, medicines, onChange, onRemove }) {
   return (
     <div className="border rounded-lg p-3 space-y-3 bg-gray-50">
+      {/* Row 1: Medicine select + Dosage */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label className="text-xs">Medicine</Label>
@@ -77,14 +78,23 @@ function MedicationRow({ med, index, medicines, onChange, onRemove }) {
             </SelectContent>
           </Select>
         </div>
+
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Dosage</Label>
+            {/* Dosage uses plain Input — can be decimal (e.g. 2.5 mg) */}
             <Input
               type="number"
               placeholder="500"
+              min={0}
               value={med.dosageAmount}
-              onChange={(e) => onChange(index, "dosageAmount", e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                // Prevent negative on manual entry
+                if (val === "" || Number(val) >= 0) {
+                  onChange(index, "dosageAmount", val);
+                }
+              }}
             />
           </div>
           <div className="space-y-1">
@@ -105,29 +115,44 @@ function MedicationRow({ med, index, medicines, onChange, onRemove }) {
           </div>
         </div>
       </div>
+
+      {/* Row 2: Duration + Frequency + Remove */}
       <div className="grid grid-cols-3 gap-3 items-end">
         <div className="space-y-1">
           <Label className="text-xs">Duration (days)</Label>
-          <Input
-            type="number"
-            placeholder="7"
+          {/*
+            min=1  — a prescription must be at least 1 day
+            max=365 — sensible upper bound
+          */}
+          <NumericInput
             value={med.durationDay}
-            onChange={(e) => onChange(index, "durationDay", e.target.value)}
+            onChange={(val) => onChange(index, "durationDay", val)}
+            min={1}
+            max={365}
+            placeholder="7"
           />
         </div>
+
         <div className="space-y-1">
           <Label className="text-xs">Frequency/day</Label>
-          <Input
-            type="number"
-            placeholder="3"
+          {/*
+            min=1  — at least once a day
+            max=24 — can't take medicine more than every hour
+          */}
+          <NumericInput
             value={med.frequency}
-            onChange={(e) => onChange(index, "frequency", e.target.value)}
+            onChange={(val) => onChange(index, "frequency", val)}
+            min={1}
+            max={24}
+            placeholder="3"
           />
         </div>
+
         <Button
           type="button"
           variant="destructive"
           size="sm"
+          className="h-9"
           onClick={() => onRemove(index)}
         >
           <Trash2 className="w-4 h-4" />
@@ -142,13 +167,13 @@ export function DoctorVisits() {
   const { user } = useAuth();
 
   // Modal states
-  const visitModal = useDisclosure();   // New visit dialog
-  const prescModal = useDisclosure();   // Create prescription dialog
-  const viewModal = useDisclosure();    // View prescription dialog (read-only)
+  const visitModal = useDisclosure();  // New visit dialog
+  const prescModal = useDisclosure();  // Create prescription dialog
+  const viewModal  = useDisclosure();  // View prescription dialog (read-only)
 
   // Selected visit for each dialog — kept separate to avoid conflicts
-  const [rxVisit, setRxVisit] = useState(null);       // for create Rx
-  const [viewVisit, setViewVisit] = useState(null);   // for view Rx
+  const [rxVisit,   setRxVisit]   = useState(null); // for create Rx
+  const [viewVisit, setViewVisit] = useState(null); // for view Rx
 
   const [medications, setMedications] = useState([]);
 
@@ -181,7 +206,6 @@ export function DoctorVisits() {
         if (result?.success) {
           visitModal.close();
           resetVF();
-          // Immediately open the prescription dialog for the new visit
           setRxVisit({
             visit_id: result.data.visitId,
             card_id: visitForm.cardId,
@@ -220,11 +244,11 @@ export function DoctorVisits() {
       symptoms: rxForm.symptoms,
       advice: rxForm.advice,
       medications: medications.map((m) => ({
-        medicineId: m.medicineId,
+        medicineId:   m.medicineId,
         dosageAmount: m.dosageAmount,
-        dosageUnit: m.dosageUnit,
-        durationDay: m.durationDay,
-        frequency: m.frequency,
+        dosageUnit:   m.dosageUnit,
+        durationDay:  m.durationDay,
+        frequency:    m.frequency,
       })),
     });
   };
@@ -236,7 +260,7 @@ export function DoctorVisits() {
 
   // Row click — only opens view dialog for completed visits
   const handleRowClick = (visit) => {
-    if (!visit.symptoms) return; // incomplete visits have no prescription to view
+    if (!visit.symptoms) return;
     setViewVisit(visit);
     viewModal.open();
   };
@@ -285,12 +309,8 @@ export function DoctorVisits() {
                     <TableHead>Date</TableHead>
                     <TableHead>Card ID</TableHead>
                     <TableHead>Patient</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Symptoms
-                    </TableHead>
-                    <TableHead className="hidden lg:table-cell">
-                      Advice
-                    </TableHead>
+                    <TableHead className="hidden md:table-cell">Symptoms</TableHead>
+                    <TableHead className="hidden lg:table-cell">Advice</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -298,7 +318,6 @@ export function DoctorVisits() {
                   {visits.map((v) => (
                     <TableRow
                       key={v.visit_id}
-                      // Only completed visits are clickable
                       className={
                         v.symptoms
                           ? "cursor-pointer hover:bg-muted/60 transition-colors"
@@ -326,7 +345,6 @@ export function DoctorVisits() {
                           <Button
                             size="sm"
                             variant="outline"
-                            // Stop propagation so row click doesn't fire
                             onClick={(e) => {
                               e.stopPropagation();
                               handleAddRx(v);
@@ -392,7 +410,10 @@ export function DoctorVisits() {
       </Dialog>
 
       {/* ── Create Prescription Dialog ──────────────────────── */}
-      <Dialog open={prescModal.isOpen} onOpenChange={(v) => !v && closeRxModal()}>
+      <Dialog
+        open={prescModal.isOpen}
+        onOpenChange={(v) => !v && closeRxModal()}
+      >
         <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Prescription</DialogTitle>
@@ -420,6 +441,8 @@ export function DoctorVisits() {
                 onChange={(e) => setRx("advice", e.target.value)}
               />
             </div>
+
+            {/* Medications */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label>Medications (Rx)</Label>
@@ -455,6 +478,7 @@ export function DoctorVisits() {
                 )}
               </div>
             </div>
+
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={closeRxModal}>
                 Cancel
