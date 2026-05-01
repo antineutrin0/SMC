@@ -103,4 +103,19 @@ export function getStatusVariant(status) {
     Rejected: 'destructive', 'REJECTED': 'destructive',
   };
   return map[status] || 'secondary';
+} 
+
+// ─── Stat chips for Prescription Dialog ───────────────────────────── 
+export function StatChip({ icon, label, value }) {
+  return (
+    <div className="rounded-md bg-muted/50 px-3 py-2">
+      <div className="flex items-center gap-1 text-muted-foreground mb-0.5">
+        {icon}
+        <span className="text-[10px] uppercase tracking-wide font-medium">
+          {label}
+        </span>
+      </div>
+      <p className="text-sm font-semibold leading-tight">{value}</p>
+    </div>
+  );
 }
