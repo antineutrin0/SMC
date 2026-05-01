@@ -19,14 +19,42 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useFetch } from "../../hooks";
 import { getNurseHistory } from "../../services/api";
 import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
+import { useCallback } from "react";
+import { use } from "react";
+import { useState } from "react";
+import { useEffect } from "react";
+// import { get } from "../../../../backend/server";
 
 export function TokenHistory() {
   const { user } = useAuth();
-  console.log(user);
-  const { data, loading } = useFetch(
-    user ? () => getNurseHistory(user.employee_id) : null,
-  );
-  const history = data?.data ?? [];
+  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState([]); 
+//   console.log(user);
+//   const { data, loading } = useFetch(
+//       useCallback(() => {
+//         if (!user?.employee_id) return Promise.resolve(null);
+//         return getNurseHistory(user?.employee_id);
+//       }, [user?.employee_id])
+// );
+
+console.log("User", user);
+
+useEffect(() => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    getNurseHistory(user.id)
+      .then((res) => {
+        setHistory(res.data);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch history:", err);
+        toast.error("Failed to load history");
+      })
+      .finally(() => setLoading(false));
+  }, [user?.id]);
+  console.log("History Data", history);
 
   return (
     <Card>

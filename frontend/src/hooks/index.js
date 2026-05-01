@@ -9,22 +9,22 @@ export function useFetch(fetchFn, deps = [], options = {}) {
   const [error, setError] = useState(null);
   const mountedRef = useRef(true);
 
-  const execute = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await fetchFn();
-      if (mountedRef.current) setData(result);
-    } catch (err) {
-      if (mountedRef.current) {
-        setError(err.message);
-        if (onError) onError(err);
-        else toast.error(err.message || "Failed to load data");
-      }
-    } finally {
-      if (mountedRef.current) setLoading(false);
+const execute = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const result = await fetchFn();
+    if (mountedRef.current) setData(result);
+  } catch (err) {
+    if (mountedRef.current) {
+      setError(err.message);
+      if (onError) onError(err);
+      else toast.error(err.message || "Failed to load data");
     }
-  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+  } finally {
+    if (mountedRef.current) setLoading(false);
+  }
+}, [fetchFn]);  // ✅ FIXED // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     mountedRef.current = true;
