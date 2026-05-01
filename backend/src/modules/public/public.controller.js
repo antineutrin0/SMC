@@ -29,7 +29,7 @@ const getEmployees = async (req, res) => {
     );
     return ok(res, { data: rows });
   } catch (err) {
-    serverError(res, err, "public.getemployees");
+    serverError(res, err, "public.getEmployees");
   }
 };
 
@@ -81,4 +81,4 @@ const getInfo = async (_req, res) => {
   return ok(res, { data: info });
 };
 
-module.exports = { getRoster, getemployees, getServices, getInfo };
+module.exports = { getRoster, getEmployees, getServices, getInfo };

@@ -36,6 +36,7 @@ import { Badge } from "../ui/badge";
 import { Plus, Trash2, Calendar } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch, useMutation, useForm, useDisclosure } from "../../hooks";
+import { useEffect } from "react";
 import {
   getDoctorVisits,
   createVisit,
@@ -140,18 +141,22 @@ export function DoctorVisits() {
   const prescModal = useDisclosure();
   const [selectedVisit, setSelectedVisit] = useState(null);
   const [medications, setMedications] = useState([]);
+  console.log("User", user);
+const {
+  data: visitsres,
+  loading,
+  refetch,
+} = useFetch(
+  useCallback(() => {
+    if (!user?.id) return Promise.resolve(null);
+    return getDoctorVisits(user.id);
+  }, [user?.id])
+);
 
-  const {
-    data: visitsres,
-    loading,
-    refetch,
-  } = useFetch(
-    useCallback(() => getDoctorVisits(user?.employee_id), [user?.employee_id]),
-    [user?.employee_id],
-  );
   const visits = visitsres?.data || [];
   const { data: medicineres } = useFetch(getMedicines);
   const medicines = medicineres?.data || [];
+
   const {
     values: visitForm,
     setValue: setVF,
@@ -180,7 +185,7 @@ export function DoctorVisits() {
       },
     },
   );
-
+  
   const { mutate: submitRx, loading: rxLoading } = useMutation(
     createPrescription,
     {

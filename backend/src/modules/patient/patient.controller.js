@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid');
 const db = require("../../config/db");
 const bcrypt = require("bcrypt");
 const {
@@ -140,6 +141,7 @@ const getFirstAidRequests = async (req, res) => {
       [cardId],
     );
 
+
     for (const req of rows) {
       const [items] = await db.query(
         `SELECT fai.*, m.name AS medicine_name
@@ -163,15 +165,18 @@ const createFirstAidRequest = async (req, res) => {
     const cardId = req.user.id;
     const { tripDetails, documentUrl, items } = req.body;
 
-    if (!tripDetails) return badRequest(res, "tripDetails is required");
+    if (!tripDetails) return badRequest(res, "tripDetails is required"); 
 
-    const [result] = await db.query(
-      `INSERT INTO first_aid_request (requested_by, trip_details, document_url, request_date, statue)
-       VALUES (?, ?, ?, CURDATE(), 'PENDING')`,
-      [cardId, tripDetails, documentUrl || null],
+    const requestId = uuidv4().replace(/-/g, '').slice(0, 15);
+
+    //const [result] = 
+    await db.query(
+      `INSERT INTO first_aid_request (request_id, requested_by, trip_details, document_url, request_date, statue)
+       VALUES (?, ?, ?, ?, CURDATE(), 'PENDING')`,
+      [requestId, cardId, tripDetails, documentUrl || null],
     );
 
-    const requestId = result.insertId;
+    //const requestId = result.insertId;
 
     if (Array.isArray(items) && items.length > 0) {
       for (const item of items) {

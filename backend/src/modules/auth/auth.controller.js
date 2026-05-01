@@ -93,7 +93,7 @@ const login = async (req, res) => {
         user: {
           id: payload.id,
           role,
-          name,
+          fullname:name,
           type: role, // alias kept for frontend compatibility
         },
       },
