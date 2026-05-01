@@ -19,7 +19,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useFetch } from "../../hooks";
 import { getPatientVisits } from "../../services/api";
 import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
-import { PrescriptionDialog } from "./PrescriptionDialog";
+import { PrescriptionDialog } from "../shared/PrescriptionDialog";
 
 export function PatientVisitHistory() {
   const { user } = useAuth();

@@ -36,26 +36,29 @@ import { Badge } from "../ui/badge";
 import { Plus, Trash2, Calendar } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch, useMutation, useForm, useDisclosure } from "../../hooks";
-import { useEffect } from "react";
 import {
   getDoctorVisits,
   createVisit,
   createPrescription,
   getMedicines,
 } from "../../services/api";
-import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
+import { LoadingSpinner, EmptyState, TableWrapper, NumericInput } from "../shared";
+import { PrescriptionDialog } from "../shared/PrescriptionDialog";
 
+// ── Constants ─────────────────────────────────────────────────
 const EMPTY_MED = {
   medicineId: "",
   dosageAmount: "",
   dosageUnit: "mg",
-  durationDay: "",
-  frequency: "",
+  durationDay: 1,   // start at 1, never below 1
+  frequency: 1,     // start at 1, never below 1
 };
 
+// ── MedicationRow ─────────────────────────────────────────────
 function MedicationRow({ med, index, medicines, onChange, onRemove }) {
   return (
     <div className="border rounded-lg p-3 space-y-3 bg-gray-50">
+      {/* Row 1: Medicine select + Dosage */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label className="text-xs">Medicine</Label>
@@ -75,14 +78,23 @@ function MedicationRow({ med, index, medicines, onChange, onRemove }) {
             </SelectContent>
           </Select>
         </div>
+
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Dosage</Label>
+            {/* Dosage uses plain Input — can be decimal (e.g. 2.5 mg) */}
             <Input
               type="number"
               placeholder="500"
+              min={0}
               value={med.dosageAmount}
-              onChange={(e) => onChange(index, "dosageAmount", e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                // Prevent negative on manual entry
+                if (val === "" || Number(val) >= 0) {
+                  onChange(index, "dosageAmount", val);
+                }
+              }}
             />
           </div>
           <div className="space-y-1">
@@ -103,29 +115,44 @@ function MedicationRow({ med, index, medicines, onChange, onRemove }) {
           </div>
         </div>
       </div>
+
+      {/* Row 2: Duration + Frequency + Remove */}
       <div className="grid grid-cols-3 gap-3 items-end">
         <div className="space-y-1">
           <Label className="text-xs">Duration (days)</Label>
-          <Input
-            type="number"
-            placeholder="7"
+          {/*
+            min=1  — a prescription must be at least 1 day
+            max=365 — sensible upper bound
+          */}
+          <NumericInput
             value={med.durationDay}
-            onChange={(e) => onChange(index, "durationDay", e.target.value)}
+            onChange={(val) => onChange(index, "durationDay", val)}
+            min={1}
+            max={365}
+            placeholder="7"
           />
         </div>
+
         <div className="space-y-1">
           <Label className="text-xs">Frequency/day</Label>
-          <Input
-            type="number"
-            placeholder="3"
+          {/*
+            min=1  — at least once a day
+            max=24 — can't take medicine more than every hour
+          */}
+          <NumericInput
             value={med.frequency}
-            onChange={(e) => onChange(index, "frequency", e.target.value)}
+            onChange={(val) => onChange(index, "frequency", val)}
+            min={1}
+            max={24}
+            placeholder="3"
           />
         </div>
+
         <Button
           type="button"
           variant="destructive"
           size="sm"
+          className="h-9"
           onClick={() => onRemove(index)}
         >
           <Trash2 className="w-4 h-4" />
@@ -135,39 +162,43 @@ function MedicationRow({ med, index, medicines, onChange, onRemove }) {
   );
 }
 
+// ── DoctorVisits ──────────────────────────────────────────────
 export function DoctorVisits() {
   const { user } = useAuth();
-  const visitModal = useDisclosure();
-  const prescModal = useDisclosure();
-  const [selectedVisit, setSelectedVisit] = useState(null);
+
+  // Modal states
+  const visitModal = useDisclosure();  // New visit dialog
+  const prescModal = useDisclosure();  // Create prescription dialog
+  const viewModal  = useDisclosure();  // View prescription dialog (read-only)
+
+  // Selected visit for each dialog — kept separate to avoid conflicts
+  const [rxVisit,   setRxVisit]   = useState(null); // for create Rx
+  const [viewVisit, setViewVisit] = useState(null); // for view Rx
+
   const [medications, setMedications] = useState([]);
-  console.log("User", user);
-const {
-  data: visitsres,
-  loading,
-  refetch,
-} = useFetch(
-  useCallback(() => {
-    if (!user?.id) return Promise.resolve(null);
-    return getDoctorVisits(user.id);
-  }, [user?.id])
-);
 
-  const visits = visitsres?.data || [];
-  const { data: medicineres } = useFetch(getMedicines);
-  const medicines = medicineres?.data || [];
+  // ── Data fetching ───────────────────────────────────────────
+  const { data: visitsRes, loading, refetch } = useFetch(
+    useCallback(() => {
+      if (!user?.id) return Promise.resolve(null);
+      return getDoctorVisits(user.id);
+    }, [user?.id]),
+  );
+  const visits = visitsRes?.data || [];
 
-  const {
-    values: visitForm,
-    setValue: setVF,
-    reset: resetVF,
-  } = useForm({ cardId: "" });
-  const {
-    values: rxForm,
-    setValue: setRx,
-    reset: resetRx,
-  } = useForm({ symptoms: "", advice: "" });
+  const { data: medicineRes } = useFetch(getMedicines);
+  const medicines = medicineRes?.data || [];
 
+  // ── Forms ───────────────────────────────────────────────────
+  const { values: visitForm, setValue: setVF, reset: resetVF } = useForm({
+    cardId: "",
+  });
+  const { values: rxForm, setValue: setRx, reset: resetRx } = useForm({
+    symptoms: "",
+    advice: "",
+  });
+
+  // ── Mutations ───────────────────────────────────────────────
   const { mutate: submitVisit, loading: visitLoading } = useMutation(
     createVisit,
     {
@@ -175,7 +206,7 @@ const {
         if (result?.success) {
           visitModal.close();
           resetVF();
-          setSelectedVisit({
+          setRxVisit({
             visit_id: result.data.visitId,
             card_id: visitForm.cardId,
           });
@@ -185,7 +216,7 @@ const {
       },
     },
   );
-  
+
   const { mutate: submitRx, loading: rxLoading } = useMutation(
     createPrescription,
     {
@@ -194,12 +225,13 @@ const {
         prescModal.close();
         resetRx();
         setMedications([]);
-        setSelectedVisit(null);
+        setRxVisit(null);
         refetch();
       },
     },
   );
 
+  // ── Handlers ────────────────────────────────────────────────
   const handleVisitSubmit = (e) => {
     e.preventDefault();
     submitVisit({ cardId: visitForm.cardId, doctorId: user.id });
@@ -208,17 +240,29 @@ const {
   const handleRxSubmit = (e) => {
     e.preventDefault();
     submitRx({
-      visitId: selectedVisit.visit_id,
+      visitId: rxVisit.visit_id,
       symptoms: rxForm.symptoms,
       advice: rxForm.advice,
       medications: medications.map((m) => ({
-        medicineId: m.medicineId,
+        medicineId:   m.medicineId,
         dosageAmount: m.dosageAmount,
-        dosageUnit: m.dosageUnit,
-        durationDay: m.durationDay,
-        frequency: m.frequency,
+        dosageUnit:   m.dosageUnit,
+        durationDay:  m.durationDay,
+        frequency:    m.frequency,
       })),
     });
+  };
+
+  const handleAddRx = (visit) => {
+    setRxVisit(visit);
+    prescModal.open();
+  };
+
+  // Row click — only opens view dialog for completed visits
+  const handleRowClick = (visit) => {
+    if (!visit.symptoms) return;
+    setViewVisit(visit);
+    viewModal.open();
   };
 
   const updateMed = (i, field, val) => {
@@ -227,6 +271,14 @@ const {
     );
   };
 
+  const closeRxModal = () => {
+    prescModal.close();
+    resetRx();
+    setMedications([]);
+    setRxVisit(null);
+  };
+
+  // ── Render ───────────────────────────────────────────────────
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -237,10 +289,14 @@ const {
         </Button>
       </div>
 
+      {/* ── Consultation History Table ──────────────────────── */}
       <Card>
         <CardHeader>
           <CardTitle>Consultation History</CardTitle>
-          <CardDescription>All patient visits you have handled</CardDescription>
+          <CardDescription>
+            All patient visits you have handled. Click a completed row to view
+            prescription.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -253,18 +309,22 @@ const {
                     <TableHead>Date</TableHead>
                     <TableHead>Card ID</TableHead>
                     <TableHead>Patient</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Symptoms
-                    </TableHead>
-                    <TableHead className="hidden lg:table-cell">
-                      Advice
-                    </TableHead>
+                    <TableHead className="hidden md:table-cell">Symptoms</TableHead>
+                    <TableHead className="hidden lg:table-cell">Advice</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {visits.map((v) => (
-                    <TableRow key={v.visit_id}>
+                    <TableRow
+                      key={v.visit_id}
+                      className={
+                        v.symptoms
+                          ? "cursor-pointer hover:bg-muted/60 transition-colors"
+                          : undefined
+                      }
+                      onClick={() => handleRowClick(v)}
+                    >
                       <TableCell className="text-sm whitespace-nowrap">
                         {new Date(v.visit_date).toLocaleDateString()}
                       </TableCell>
@@ -281,19 +341,18 @@ const {
                         {v.advice || "—"}
                       </TableCell>
                       <TableCell>
-                        {!v.symptoms && (
+                        {!v.symptoms ? (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
-                              setSelectedVisit(v);
-                              prescModal.open();
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddRx(v);
                             }}
                           >
                             Add Rx
                           </Button>
-                        )}
-                        {v.symptoms && (
+                        ) : (
                           <Badge variant="outline" className="text-xs">
                             Done
                           </Badge>
@@ -315,7 +374,7 @@ const {
         </CardContent>
       </Card>
 
-      {/* New Visit Dialog */}
+      {/* ── New Visit Dialog ────────────────────────────────── */}
       <Dialog
         open={visitModal.isOpen}
         onOpenChange={(v) => !v && visitModal.close()}
@@ -339,11 +398,7 @@ const {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={visitModal.close}
-              >
+              <Button type="button" variant="outline" onClick={visitModal.close}>
                 Cancel
               </Button>
               <Button type="submit" disabled={visitLoading}>
@@ -354,16 +409,16 @@ const {
         </DialogContent>
       </Dialog>
 
-      {/* Prescription Dialog */}
+      {/* ── Create Prescription Dialog ──────────────────────── */}
       <Dialog
         open={prescModal.isOpen}
-        onOpenChange={(v) => !v && prescModal.close()}
+        onOpenChange={(v) => !v && closeRxModal()}
       >
         <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Prescription</DialogTitle>
             <DialogDescription>
-              Patient: {selectedVisit?.patient_name || selectedVisit?.card_id}
+              Patient: {rxVisit?.patient_name || rxVisit?.card_id}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleRxSubmit} className="space-y-4">
@@ -386,6 +441,8 @@ const {
                 onChange={(e) => setRx("advice", e.target.value)}
               />
             </div>
+
+            {/* Medications */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label>Medications (Rx)</Label>
@@ -421,17 +478,9 @@ const {
                 )}
               </div>
             </div>
+
             <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  prescModal.close();
-                  resetRx();
-                  setMedications([]);
-                  setSelectedVisit(null);
-                }}
-              >
+              <Button type="button" variant="outline" onClick={closeRxModal}>
                 Cancel
               </Button>
               <Button type="submit" disabled={rxLoading}>
@@ -441,6 +490,16 @@ const {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── View Prescription Dialog (read-only) ────────────── */}
+      <PrescriptionDialog
+        visit={viewVisit}
+        open={viewModal.isOpen}
+        onClose={() => {
+          viewModal.close();
+          setViewVisit(null);
+        }}
+      />
     </>
   );
 }

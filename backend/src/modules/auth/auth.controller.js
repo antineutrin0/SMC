@@ -125,7 +125,7 @@ const getMe = async (req, res) => {
       userData = rows[0] || null;
     } else {
       const [rows] = await db.query(
-        `SELECT employee_id, fullname, designation, specialization, contact_no, photo_url, is_active
+        `SELECT employee_id as id, fullname, designation, specialization, contact_no, photo_url, is_active
          FROM employee WHERE employee_id = ?`,
         [id],
       );
