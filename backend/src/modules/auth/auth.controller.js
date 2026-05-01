@@ -85,7 +85,7 @@ const login = async (req, res) => {
     };
 
     const token = sign(payload);
-
+    
     return ok(
       res,
       {

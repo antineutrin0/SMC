@@ -17,9 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { FileText, ArrowLeft } from "lucide-react";
+import { FileText, ArrowLeft, ImageUp } from "lucide-react";
 import { applyForMedicalCard } from "../services/api";
 import { toast } from "sonner";
+import ImageUpload from "../components/shared/ImageUpload";
 
 export default function ApplyMedicalCardPage() {
   const navigate = useNavigate();
@@ -42,6 +43,17 @@ export default function ApplyMedicalCardPage() {
     idCardUrl: "",
     password: "",
   });
+
+  const handlePhotoUpload = (url) => {
+    console.log("Received URL:", url);
+    setFormData((prev) => ({ ...prev, photoUrl: url }));
+  };
+
+  const handleIdCardUpload = (url) => {
+    console.log("Received URL:", url);
+    setFormData((prev) => ({ ...prev, idCardUrl: url }));
+  };
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -256,16 +268,8 @@ export default function ApplyMedicalCardPage() {
                 Documents
               </h3>
               <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="photoUrl">Photo URL</Label>
-                  <Input
-                    id="photoUrl"
-                    placeholder="https://..."
-                    value={formData.photoUrl}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="space-y-1.5">
+                <ImageUpload onUpload={handleIdCardUpload} />
+                {/* <div className="space-y-1.5">
                   <Label htmlFor="idCardUrl">ID Card Image URL</Label>
                   <Input
                     id="idCardUrl"
@@ -273,7 +277,9 @@ export default function ApplyMedicalCardPage() {
                     value={formData.idCardUrl}
                     onChange={handleChange}
                   />
-                </div>
+                </div> */}
+                <ImageUpload onUpload={handlePhotoUpload} />
+
                 <div className="space-y-1.5">
                   <Label htmlFor="password">Password</Label>
                   <Input
