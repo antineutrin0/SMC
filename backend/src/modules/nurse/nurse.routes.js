@@ -9,5 +9,6 @@ router.get("/tokens/pending",          ctrl.getPendingTokens);
 router.get("/prescription/:visitId",   ctrl.getPrescription);
 router.post("/dispense", validate(["tokenId", "medicines"]), ctrl.dispenseMedicine);
 router.get("/:nurseId/history",        ctrl.getDispensationHistory);
+router.post("/requisition",  ctrl.createRequisition);
 
 module.exports = router;
