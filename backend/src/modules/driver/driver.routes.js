@@ -3,7 +3,7 @@ const ctrl     = require("./driver.controller");
 const { verifyToken, requireRole } = require("../../middleware/auth");
 const validate = require("../../middleware/validate");
 
-router.use(verifyToken, requireRole("Driver"));
+router.use(verifyToken, requireRole("Driver", "Admin"));
 
 router.get("/:driverId/logs",           ctrl.getLogs);
 router.get("/logs/all",                  ctrl.getAllLogs);
@@ -12,3 +12,4 @@ router.patch("/logs/:logId/complete",    ctrl.completeTrip);
 router.patch("/logs/:logId",             ctrl.updateLog);
 
 module.exports = router;
+   

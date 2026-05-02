@@ -208,23 +208,56 @@ const reviewFirstAidRequest = async (req, res) => {
 // GET /api/pharmacist/requisitions
 const getRequisitions = async (req, res) => {
   try {
-    const [rows] = await db.query(
-      `SELECT sr.*, e.fullname AS requested_by_name
-       FROM substore_requisition sr
-       JOIN employee e ON sr.made_by = e.employee_id
-       ORDER BY sr.requisition_id DESC`,
-    );
+    const [rows] = await db.query(`
+      SELECT 
+        sr.requisition_id,
+        sr.made_by,
+        sr.status,
+        sr.created_at,
+
+        e.fullname AS requested_by_name,
+
+        ri.medicine_id,
+        ri.quantity_asked,
+        ri.quantity_approved,
+
+        m.name AS medicine_name
+
+      FROM substore_requisition sr
+      JOIN employee e ON sr.made_by = e.employee_id
+      LEFT JOIN requisition_item ri ON sr.requisition_id = ri.requisition_id
+      LEFT JOIN medicine m ON ri.medicine_id = m.medicine_id
+
+      ORDER BY sr.created_at DESC
+      LIMIT 50
+    `);
+
+    const map = new Map();
+
     for (const row of rows) {
-      const [items] = await db.query(
-        `SELECT ri.*, m.name AS medicine_name
-         FROM requisition_item ri
-         JOIN medicine m ON ri.medicine_id = m.medicine_id
-         WHERE ri.requisition_id = ?`,
-        [row.requisition_id],
-      );
-      row.items = items;
+      if (!map.has(row.requisition_id)) {
+        map.set(row.requisition_id, {
+          requisition_id: row.requisition_id,
+          made_by: row.made_by,
+          requested_by_name: row.requested_by_name,
+          status: row.status,
+          created_at: row.created_at,
+          items: [],
+        });
+      }
+
+      if (row.medicine_id) {
+        map.get(row.requisition_id).items.push({
+          medicine_id: row.medicine_id,
+          medicine_name: row.medicine_name,
+          quantity_asked: row.quantity_asked,
+          quantity_approved: row.quantity_approved,
+        });
+      }
     }
-    return ok(res, { data: rows });
+
+    return ok(res, { data: Array.from(map.values()) });
+
   } catch (err) {
     serverError(res, err, "pharmacist.getRequisitions");
   }
@@ -232,41 +265,114 @@ const getRequisitions = async (req, res) => {
 
 // POST /api/pharmacist/requisitions/:id/process
 const processRequisition = async (req, res) => {
+  const conn = await db.getConnection();
+
   try {
     const { id } = req.params;
+    const { status, items } = req.body;
     const employeeId = req.user.id;
 
-    const [items] = await db.query(
-      "SELECT * FROM requisition_item WHERE requisition_id = ?",
-      [id],
-    );
+    if (!status) return badRequest(res, "Status required");
 
+    await conn.beginTransaction();
+
+    // ❌ REJECT CASE
+    if (status === "Rejected") {
+      await conn.query(
+        "UPDATE substore_requisition SET status = 'Rejected' WHERE requisition_id = ?",
+        [id]
+      );
+
+      await conn.commit();
+      return ok(res, {}, "Requisition rejected");
+    }
+
+    // ✅ PROCESS / PARTIAL APPROVAL
     for (const item of items) {
-      await db.query(
-        `UPDATE medicine_inventory SET quantity = quantity - ?
-         WHERE medicine_id = ? AND quantity >= ? ORDER BY exp_date ASC LIMIT 1`,
-        [item.quantity, item.medicine_id, item.quantity],
+      let remaining = item.approvedQuantity;
+
+      // update approved quantity
+      await conn.query(
+        `UPDATE requisition_item 
+         SET quantity_approved = ?
+         WHERE requisition_id = ? AND medicine_id = ?`,
+        [item.approvedQuantity, id, item.medicineId]
       );
 
-      const [[{ total }]] = await db.query(
-        "SELECT COALESCE(SUM(quantity), 0) AS total FROM medicine_inventory WHERE medicine_id = ?",
-        [item.medicine_id],
+      if (remaining <= 0) continue;
+
+      // 🔥 FIFO deduction
+      const [batches] = await conn.query(
+        `SELECT inventory_id, quantity 
+         FROM medicine_inventory
+         WHERE medicine_id = ? AND quantity > 0
+         ORDER BY exp_date ASC`,
+        [item.medicineId]
       );
 
-      await db.query(
-        `INSERT INTO medicine_transaction (medicine_id, transaction_type, quantity, made_by, reference_type, reference_id, balance_after)
-         VALUES (?, 'OUT', ?, ?, 'Substore', ?, ?)`,
-        [item.medicine_id, item.quantity, employeeId, id, total],
+      for (const batch of batches) {
+        if (remaining <= 0) break;
+
+        const deduct = Math.min(batch.quantity, remaining);
+
+        await conn.query(
+          `UPDATE medicine_inventory
+           SET quantity = quantity - ?
+           WHERE inventory_id = ?`,
+          [deduct, batch.inventory_id]
+        );
+
+        remaining -= deduct;
+      }
+
+      // ❗ Optional: handle insufficient stock
+      if (remaining > 0) {
+        //serverError(res, new Error(`Insufficient stock for medicine ID ${item.medicineId}`), "pharmacist.processRequisition");
+        throw new Error(
+          `Insufficient stock for medicine ${item.medicineId}`
+        );
+      }
+
+      // ✅ get new balance
+      const [[{ total }]] = await conn.query(
+        `SELECT COALESCE(SUM(quantity),0) AS total 
+         FROM medicine_inventory 
+         WHERE medicine_id = ?`,
+        [item.medicineId]
+      );
+
+      // ✅ transaction log
+      await conn.query(
+        `INSERT INTO medicine_transaction
+         (medicine_id, transaction_type, quantity, made_by, reference_type, reference_id, balance_after)
+         VALUES (?, 'OUT', ?, ?, 'Requisition', ?, ?)`,
+        [
+          item.medicineId,
+          item.approvedQuantity,
+          employeeId,
+          id,
+          total,
+        ]
       );
     }
 
-    await db.query(
-      "UPDATE substore_requisition SET status = 'Processed' WHERE requisition_id = ?",
-      [id],
+    // ✅ update requisition status
+    await conn.query(
+      `UPDATE substore_requisition 
+       SET status = 'Processed' 
+       WHERE requisition_id = ?`,
+      [id]
     );
-    return ok(res, {}, "Requisition processed");
+
+    await conn.commit();
+
+    return ok(res, {}, "Requisition processed successfully");
+
   } catch (err) {
+    await conn.rollback();
     serverError(res, err, "pharmacist.processRequisition");
+  } finally {
+    conn.release();
   }
 };
 

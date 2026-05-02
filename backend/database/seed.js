@@ -270,6 +270,8 @@ CREATE TABLE IF NOT EXISTS ambulance_log (
   departure_time  TIMESTAMP    NOT NULL,
   return_time     TIMESTAMP,
   destination     VARCHAR(100),
+  initial_kms DECIMAL(10, 2) NOT NULL,
+  final_kms DECIMAL(10, 2) NOT NULL,
   PRIMARY KEY (log_id),
   FOREIGN KEY (patient_id) REFERENCES MedicalCard(CardID),
   FOREIGN KEY (driver_id)  REFERENCES employee(employee_id)
