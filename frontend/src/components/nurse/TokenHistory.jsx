@@ -28,18 +28,18 @@ import { useEffect } from "react";
 export function TokenHistory() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [history, setHistory] = useState([]); 
-//   console.log(user);
-//   const { data, loading } = useFetch(
-//       useCallback(() => {
-//         if (!user?.id) return Promise.resolve(null);
-//         return getNurseHistory(user?.id);
-//       }, [user?.id])
-// );
+  const [history, setHistory] = useState([]);
+  //   console.log(user);
+  //   const { data, loading } = useFetch(
+  //       useCallback(() => {
+  //         if (!user?.id) return Promise.resolve(null);
+  //         return getNurseHistory(user?.id);
+  //       }, [user?.id])
+  // );
 
-console.log("User", user);
+  console.log("User", user);
 
-useEffect(() => {
+  useEffect(() => {
     if (!user?.id) {
       setLoading(false);
       return;
