@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS Person (
 );
 
 -- ── Employee (doctors, nurses, registrars, admins, drivers) ─────────────────
-CREATE TABLE IF NOT EXISTS Employee (
+CREATE TABLE IF NOT EXISTS employee (
   employee_id    VARCHAR(12)  NOT NULL,
   fullname       VARCHAR(100) NOT NULL,
   designation    ENUM('Doctor','Nurse','Registrar','Driver','Admin') NOT NULL,
@@ -70,8 +70,8 @@ CREATE TABLE IF NOT EXISTS MedicalCardApplication (
   PersonID          VARCHAR(20)  NOT NULL,
   PRIMARY KEY (ApplicationID),
   FOREIGN KEY (PersonID)    REFERENCES Person(person_id),
-  FOREIGN KEY (ReviewerId)  REFERENCES Employee(employee_id),
-  FOREIGN KEY (ApprovedBy)  REFERENCES Employee(employee_id)
+  FOREIGN KEY (ReviewerId)  REFERENCES employee(employee_id),
+  FOREIGN KEY (ApprovedBy)  REFERENCES employee(employee_id)
 );
 
 -- ── Medical Card ─────────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS medicine_transaction (
   balance_after    INT          NOT NULL,
   PRIMARY KEY (transaction_id),
   FOREIGN KEY (medicine_id) REFERENCES medicine(medicine_id),
-  FOREIGN KEY (made_by)     REFERENCES Employee(employee_id)
+  FOREIGN KEY (made_by)     REFERENCES employee(employee_id)
 );
 
 -- ── Outdoor Visit ────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS outdoor_visit (
   visit_type  ENUM('First Visit','Follow-up','Emergency') NOT NULL DEFAULT 'First Visit',
   PRIMARY KEY (visit_id),
   FOREIGN KEY (card_id)   REFERENCES MedicalCard(CardID),
-  FOREIGN KEY (doctor_id) REFERENCES Employee(employee_id)
+  FOREIGN KEY (doctor_id) REFERENCES employee(employee_id)
 );
 
 -- ── Prescription ─────────────────────────────────────────────────────────────
@@ -144,6 +144,7 @@ CREATE TABLE IF NOT EXISTS prescription (
   visit_id        INT          NOT NULL,
   symptoms        VARCHAR(1000),
   advice          VARCHAR(500),
+  hastoken         TINYINT(1)   NOT NULL DEFAULT 0,
   created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (prescription_id),
   FOREIGN KEY (visit_id) REFERENCES outdoor_visit(visit_id)
@@ -212,7 +213,7 @@ CREATE TABLE IF NOT EXISTS medicine_dispensation (
   PRIMARY KEY (dispensation_id),
   FOREIGN KEY (token_id)      REFERENCES token(token_id),
   FOREIGN KEY (medicine_id)   REFERENCES medicine(medicine_id),
-  FOREIGN KEY (dispensed_by)  REFERENCES Employee(employee_id)
+  FOREIGN KEY (dispensed_by)  REFERENCES employee(employee_id)
 );
 
 -- ── Substore Requisition ─────────────────────────────────────────────────────
@@ -222,14 +223,15 @@ CREATE TABLE IF NOT EXISTS substore_requisition (
   created_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   status         ENUM('Pending','Processed','Rejected') NOT NULL DEFAULT 'Pending',
   PRIMARY KEY (requisition_id),
-  FOREIGN KEY (made_by) REFERENCES Employee(employee_id)
+  FOREIGN KEY (made_by) REFERENCES employee(employee_id)
 );
 
 -- ── Requisition Item ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS requisition_item (
   requisition_id VARCHAR(15) NOT NULL,
   medicine_id    INT         NOT NULL,
-  quantity       INT         NOT NULL,
+  quantity_asked      INT         NOT NULL,
+  quantity_approved INT DEFAULT 0,
   PRIMARY KEY (requisition_id, medicine_id),
   FOREIGN KEY (requisition_id) REFERENCES substore_requisition(requisition_id),
   FOREIGN KEY (medicine_id)    REFERENCES medicine(medicine_id)
@@ -246,7 +248,7 @@ CREATE TABLE IF NOT EXISTS first_aid_request (
   statue       ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
   PRIMARY KEY (request_id),
   FOREIGN KEY (requested_by) REFERENCES MedicalCard(CardID),
-  FOREIGN KEY (approved_by)  REFERENCES Employee(employee_id)
+  FOREIGN KEY (approved_by)  REFERENCES employee(employee_id)
 );
 
 -- ── First Aid Item ───────────────────────────────────────────────────────────
@@ -270,7 +272,7 @@ CREATE TABLE IF NOT EXISTS ambulance_log (
   destination     VARCHAR(100),
   PRIMARY KEY (log_id),
   FOREIGN KEY (patient_id) REFERENCES MedicalCard(CardID),
-  FOREIGN KEY (driver_id)  REFERENCES Employee(employee_id)
+  FOREIGN KEY (driver_id)  REFERENCES employee(employee_id)
 );
 
 -- ── Roster ───────────────────────────────────────────────────────────────────
@@ -287,9 +289,9 @@ CREATE TABLE IF NOT EXISTS roster (
   approved_by VARCHAR(12),
   status      ENUM('Draft','Approved') NOT NULL DEFAULT 'Draft',
   PRIMARY KEY (roster_id),
-  FOREIGN KEY (employee_id) REFERENCES Employee(employee_id),
-  FOREIGN KEY (created_by)  REFERENCES Employee(employee_id),
-  FOREIGN KEY (approved_by) REFERENCES Employee(employee_id)
+  FOREIGN KEY (employee_id) REFERENCES employee(employee_id),
+  FOREIGN KEY (created_by)  REFERENCES employee(employee_id),
+  FOREIGN KEY (approved_by) REFERENCES employee(employee_id)
 );
 `;
 
@@ -333,7 +335,7 @@ async function seed() {
 
     for (const e of employees) {
       await conn.query(
-        `INSERT IGNORE INTO Employee
+        `INSERT IGNORE INTO employee
            (employee_id,fullname,designation,specialization,license_no,photo_url,contact_no,is_active,password_hash)
          VALUES (?,?,?,?,?,?,?,?,?)`,
         e,
@@ -739,7 +741,7 @@ async function seed() {
     `);
 
     await conn.query(`
-      INSERT IGNORE INTO requisition_item (requisition_id, medicine_id, quantity) VALUES
+      INSERT IGNORE INTO requisition_item (requisition_id, medicine_id, quantity_asked) VALUES
       -- REQ2024-001
       ('REQ2024-001', 1,  500),
       ('REQ2024-001', 6,  100),
