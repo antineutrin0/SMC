@@ -165,6 +165,7 @@ CREATE TABLE IF NOT EXISTS medication (
 -- ── Token (medicine collection slip) ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS token (
   token_id     INT         NOT NULL AUTO_INCREMENT,
+  token_uuid VARCHAR(6) NOT NULL,
   visit_id     INT         NOT NULL,
   issued_time  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   status       ENUM('Pending','Consumed') NOT NULL DEFAULT 'Pending',
