@@ -42,25 +42,21 @@ const EMPTY_MED = {
   medicineId: "",
   dosageAmount: "",
   dosageUnit: "mg",
-  durationDay: 1,   // start at 1, never below 1
-  frequency: 1,     // start at 1, never below 1
+  durationDay: 1,
+  frequency: 1,
 };
-
-
 
 // ── DoctorVisits ──────────────────────────────────────────────
 export function DoctorVisits() {
   const { user } = useAuth();
 
   // Modal states
-  const visitModal = useDisclosure();  // New visit dialog
-  const prescModal = useDisclosure();  // Create prescription dialog
-  const viewModal  = useDisclosure();  // View prescription dialog (read-only)
+  const visitModal = useDisclosure();
+  const prescModal = useDisclosure();
+  const viewModal  = useDisclosure();
 
-  // Selected visit for each dialog — kept separate to avoid conflicts
-  const [rxVisit,   setRxVisit]   = useState(null); // for create Rx
-  const [viewVisit, setViewVisit] = useState(null); // for view Rx
-
+  const [rxVisit,   setRxVisit]   = useState(null);
+  const [viewVisit, setViewVisit] = useState(null);
   const [medications, setMedications] = useState([]);
 
   // ── Data fetching ───────────────────────────────────────────
@@ -144,10 +140,17 @@ export function DoctorVisits() {
     prescModal.open();
   };
 
-  // Row click — only opens view dialog for completed visits
+  // Row click — enrich the visit with doctor info from auth context
+  // so PrescriptionDialog always has doctor_name + doctor_specialization
   const handleRowClick = (visit) => {
     if (!visit.symptoms) return;
-    setViewVisit(visit);
+    setViewVisit({
+      ...visit,
+      // visit rows from getDoctorVisits may not carry doctor fields —
+      // inject them from the logged-in user object
+      doctor_name:           visit.doctor_name           ?? user?.name,
+      doctor_specialization: visit.doctor_specialization ?? user?.specialization,
+    });
     viewModal.open();
   };
 

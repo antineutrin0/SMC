@@ -13,7 +13,10 @@ import {
   AlignLeft,
   User,
   Stethoscope,
+  UserRound,
+  Utensils,
 } from "lucide-react";
+import { Separator } from "../ui/separator";
 import { StatChip } from ".";
 
 // ── Dummy prescription data (replace with API call later) ─────
@@ -50,7 +53,25 @@ const DUMMY_PRESCRIPTIONS = [
   },
 ];
 
+// ── Small info row used in the header card ─────────────────────
+function InfoRow({ icon: Icon, label, value }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <Icon className="size-3.5 text-muted-foreground shrink-0" />
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-medium text-foreground">{value}</span>
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────
+// Props:
+//   visit   — the visit object. Expected fields (all optional):
+//               visit_date, doctor_name, doctor_specialization,
+//               patient_name, card_id, symptoms, advice
+//   open    — boolean
+//   onClose — () => void
 export function PrescriptionDialog({ visit, open, onClose }) {
   // TODO: Replace DUMMY_PRESCRIPTIONS with API call:
   // const { data, loading } = useFetch(
@@ -68,7 +89,7 @@ export function PrescriptionDialog({ visit, open, onClose }) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
 
-        {/* ── Header ───────────────────────────────────────── */}
+        {/* ── Dialog Header ─────────────────────────────────── */}
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Stethoscope className="size-5 text-primary" />
@@ -76,26 +97,63 @@ export function PrescriptionDialog({ visit, open, onClose }) {
           </DialogTitle>
           {visit && (
             <DialogDescription asChild>
-              <div className="flex flex-wrap gap-3 pt-1">
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Calendar className="size-3.5" />
-                  {new Date(visit.visit_date).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <User className="size-3.5" />
-                  {visit.doctor_name}
-                </span>
-              </div>
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground pt-0.5">
+                <Calendar className="size-3.5" />
+                {new Date(visit.visit_date).toLocaleDateString("en-US", {
+                  weekday: "short",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
             </DialogDescription>
           )}
         </DialogHeader>
 
-        {/* ── Visit Summary ─────────────────────────────────── */}
+        {/* ── Doctor & Patient Info Card ────────────────────── */}
+        {visit && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border bg-muted/30 p-4">
+
+            {/* Doctor column */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                Doctor
+              </p>
+              <InfoRow
+                icon={Stethoscope}
+                label="Name"
+                value={visit.doctor_name}
+              />
+              <InfoRow
+                icon={User}
+                label="Specialization"
+                value={visit.doctor_specialization}
+              />
+            </div>
+
+            {/* Divider on mobile (horizontal), hidden on sm+ */}
+            <Separator className="sm:hidden" />
+
+            {/* Patient column */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                Patient
+              </p>
+              <InfoRow
+                icon={UserRound}
+                label="Name"
+                value={visit.patient_name}
+              />
+              <InfoRow
+                icon={Hash}
+                label="Card ID"
+                value={visit.card_id}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ── Visit Summary (Symptoms + Advice) ─────────────── */}
         {visit && (visit.symptoms || visit.advice) && (
           <div className="grid gap-3 rounded-lg border bg-muted/30 p-4">
             {visit.symptoms && (
@@ -150,7 +208,7 @@ export function PrescriptionDialog({ visit, open, onClose }) {
 
                 {/* Stat chips */}
                 <div className="grid grid-cols-3 gap-2">
-                  <StatChip
+                  {/* <StatChip
                     icon={<Hash className="size-3" />}
                     label="Quantity"
                     value={
@@ -158,7 +216,7 @@ export function PrescriptionDialog({ visit, open, onClose }) {
                         ? `${med.quantity} ${med.unit ?? "pcs"}`
                         : "—"
                     }
-                  />
+                  /> */}
                   <StatChip
                     icon={<Pill className="size-3" />}
                     label="Dose"
@@ -169,12 +227,19 @@ export function PrescriptionDialog({ visit, open, onClose }) {
                     label="Frequency"
                     value={med.frequency ?? "—"}
                   />
+                  <StatChip
+                    icon={<Utensils className="size-3" />}
+                    label="Timing"
+                    value={med.timing ?? "After meals"}
+                  />
                 </div>
 
                 {/* Duration */}
                 {med.duration && (
                   <div className="mt-3 pt-3 border-t text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">Duration:</span>{" "}
+                    <span className="font-medium text-foreground">
+                      Duration:
+                    </span>{" "}
                     {med.duration}
                   </div>
                 )}
