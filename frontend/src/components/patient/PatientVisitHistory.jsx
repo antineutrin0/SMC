@@ -14,12 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { Calendar } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch } from "../../hooks";
 import { getPatientVisits } from "../../services/api";
 import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
 import { PrescriptionDialog } from "../shared/PrescriptionDialog";
+import { SearchBar, useVisitFilter } from "../shared/SearchBar";
 
 export function PatientVisitHistory() {
   const { user } = useAuth();
@@ -31,15 +32,57 @@ export function PatientVisitHistory() {
 
   const [selectedVisit, setSelectedVisit] = useState(null);
 
+  const { query, setQuery, date, setDate, filtered, isFiltering } =
+    useVisitFilter(visits);
+
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Visit History</CardTitle>
-          <CardDescription>
-            Click any row to view the full prescription
-          </CardDescription>
+          <div className="flex flex-col gap-3">
+            <div>
+              <CardTitle>Visit History</CardTitle>
+              <CardDescription>
+                Click any row to view the full prescription
+              </CardDescription>
+            </div>
+
+            {/* ── Filters ──────────────────────────────────── */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              {/* Doctor name search */}
+              <SearchBar
+                value={query}
+                onChange={setQuery}
+                placeholder="Search by doctor name…"
+              />
+
+              {/* Native date input — value is "YYYY-MM-DD" or "" */}
+              <div className="relative flex items-center w-full max-w-sm">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  // Cap future dates — visits can't be in the future
+                  max={new Date().toISOString().slice(0, 10)}
+                  className="w-full h-9 rounded-md border border-input bg-transparent pl-9 pr-9 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                />
+                {/* Clear button — only shown when a date is selected */}
+                {date && (
+                  <button
+                    type="button"
+                    onClick={() => setDate("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Clear date filter"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </CardHeader>
+
         <CardContent>
           {loading ? (
             <LoadingSpinner className="py-10" />
@@ -59,9 +102,9 @@ export function PatientVisitHistory() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {visits.map((v) => (
+                  {filtered.map((v, index) => (
                     <TableRow
-                      key={v.visit_id}
+                      key={`${v.visit_id}-${index}`}
                       className="cursor-pointer hover:bg-muted/60 transition-colors"
                       onClick={() => setSelectedVisit(v)}
                     >
@@ -79,13 +122,22 @@ export function PatientVisitHistory() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {visits.length === 0 && (
+
+                  {filtered.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4}>
                         <EmptyState
                           icon={Calendar}
-                          title="No visits found"
-                          description="Your visit history will appear here"
+                          title={
+                            isFiltering
+                              ? "No visits match your filters"
+                              : "No visits found"
+                          }
+                          description={
+                            isFiltering
+                              ? "Try a different doctor name or date"
+                              : "Your visit history will appear here"
+                          }
                         />
                       </TableCell>
                     </TableRow>
