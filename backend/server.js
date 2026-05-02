@@ -36,10 +36,7 @@ app.use("/api/admin", require("./src/modules/admin/admin.routes"));
 app.use("/api/doctor", require("./src/modules/doctor/doctor.routes"));
 app.use("/api/patient", require("./src/modules/patient/patient.routes"));
 app.use("/api/nurse", require("./src/modules/nurse/nurse.routes"));
-app.use(
-  "/api/pharmacist",
-  require("./src/modules/pharmacist/pharmacist.routes"),
-);
+app.use("/api/pharmacist", require("./src/modules/pharmacist/pharmacist.routes"));
 app.use("/api/driver", require("./src/modules/driver/driver.routes"));
 
 // ── Health check ─────────────────────────────────────────────

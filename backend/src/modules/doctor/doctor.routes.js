@@ -10,5 +10,6 @@ router.post("/visits",            validate(["cardId"]), ctrl.createVisit);
 router.post("/prescriptions",     validate(["visitId", "symptoms"]), ctrl.createPrescription);
 router.get("/prescriptions/:visitId", ctrl.getPrescription);
 router.get("/medicines",          ctrl.getMedicines);
+router.post("/createtokens", validate(["visitId"]), ctrl.createToken);
 
 module.exports = router;

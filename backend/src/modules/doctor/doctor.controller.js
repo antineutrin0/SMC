@@ -85,6 +85,38 @@ const createPrescription = async (req, res) => {
   } catch (err) { serverError(res, err, "doctor.createPrescription"); }
 };
 
+const createToken = async (req, res) => {
+  try {
+    const { visitId, medications } = req.body;
+
+    // Ensure visit exists and belongs to this doctor
+    const [visitRows] = await db.query(
+      "SELECT visit_id FROM outdoor_visit WHERE visit_id = ? AND doctor_id = ?",
+      [visitId, req.user.id]
+    );
+    if (!visitRows.length) return notFound(res, "Visit not found or not yours");
+
+    // Create token
+    const [tokenResult] = await db.query(
+      "INSERT INTO token (visit_id, issued_time) VALUES (?, NOW())",
+      [visitId]
+    );
+    // create token items
+    if (Array.isArray(medications) && medications.length > 0) {
+      for (const med of medications) {
+        await db.query(
+          `INSERT INTO token_item (token_id, medicine_id, quantity)
+           VALUES (?, ?, ?)`,
+          [tokenResult.insertId, med.medicineId, med.quantity]
+        );
+      }
+    }
+
+    return created(res, {}, "Token created");
+  } catch (err) { serverError(res, err, "doctor.createToken"); }
+};
+
+
 // GET /api/doctor/prescriptions/:visitId
 const getPrescription = async (req, res) => {
   try {
@@ -124,4 +156,4 @@ const getMedicines = async (req, res) => {
   } catch (err) { serverError(res, err, "doctor.getMedicines"); }
 };
 
-module.exports = { getVisits, createVisit, createPrescription, getPrescription, getMedicines };
+module.exports = { getVisits, createVisit, createPrescription, getPrescription, getMedicines, createToken };

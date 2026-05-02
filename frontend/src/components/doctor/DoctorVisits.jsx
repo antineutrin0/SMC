@@ -24,16 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-import { Badge } from "../ui/badge";
-import { Plus, Trash2, Calendar } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch, useMutation, useForm, useDisclosure } from "../../hooks";
 import {
@@ -42,7 +33,8 @@ import {
   createPrescription,
   getMedicines,
 } from "../../services/api";
-import { LoadingSpinner, EmptyState, TableWrapper, NumericInput } from "../shared";
+import MedicationRow from "./MedicationRow";
+import VisitsTable from "./VisitsTable";
 import { PrescriptionDialog } from "../shared/PrescriptionDialog";
 
 // ── Constants ─────────────────────────────────────────────────
@@ -54,113 +46,7 @@ const EMPTY_MED = {
   frequency: 1,     // start at 1, never below 1
 };
 
-// ── MedicationRow ─────────────────────────────────────────────
-function MedicationRow({ med, index, medicines, onChange, onRemove }) {
-  return (
-    <div className="border rounded-lg p-3 space-y-3 bg-gray-50">
-      {/* Row 1: Medicine select + Dosage */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs">Medicine</Label>
-          <Select
-            value={med.medicineId}
-            onValueChange={(v) => onChange(index, "medicineId", v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select medicine" />
-            </SelectTrigger>
-            <SelectContent>
-              {medicines.map((m) => (
-                <SelectItem key={m.medicine_id} value={String(m.medicine_id)}>
-                  {m.name} ({m.total_quantity ?? 0} left)
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label className="text-xs">Dosage</Label>
-            {/* Dosage uses plain Input — can be decimal (e.g. 2.5 mg) */}
-            <Input
-              type="number"
-              placeholder="500"
-              min={0}
-              value={med.dosageAmount}
-              onChange={(e) => {
-                const val = e.target.value;
-                // Prevent negative on manual entry
-                if (val === "" || Number(val) >= 0) {
-                  onChange(index, "dosageAmount", val);
-                }
-              }}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Unit</Label>
-            <Select
-              value={med.dosageUnit}
-              onValueChange={(v) => onChange(index, "dosageUnit", v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mg">mg</SelectItem>
-                <SelectItem value="ml">ml</SelectItem>
-                <SelectItem value="unit">unit</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Row 2: Duration + Frequency + Remove */}
-      <div className="grid grid-cols-3 gap-3 items-end">
-        <div className="space-y-1">
-          <Label className="text-xs">Duration (days)</Label>
-          {/*
-            min=1  — a prescription must be at least 1 day
-            max=365 — sensible upper bound
-          */}
-          <NumericInput
-            value={med.durationDay}
-            onChange={(val) => onChange(index, "durationDay", val)}
-            min={1}
-            max={365}
-            placeholder="7"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Frequency/day</Label>
-          {/*
-            min=1  — at least once a day
-            max=24 — can't take medicine more than every hour
-          */}
-          <NumericInput
-            value={med.frequency}
-            onChange={(val) => onChange(index, "frequency", val)}
-            min={1}
-            max={24}
-            placeholder="3"
-          />
-        </div>
-
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          className="h-9"
-          onClick={() => onRemove(index)}
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 // ── DoctorVisits ──────────────────────────────────────────────
 export function DoctorVisits() {
@@ -289,90 +175,12 @@ export function DoctorVisits() {
         </Button>
       </div>
 
-      {/* ── Consultation History Table ──────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Consultation History</CardTitle>
-          <CardDescription>
-            All patient visits you have handled. Click a completed row to view
-            prescription.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <LoadingSpinner className="py-10" />
-          ) : (
-            <TableWrapper>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Card ID</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead className="hidden md:table-cell">Symptoms</TableHead>
-                    <TableHead className="hidden lg:table-cell">Advice</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visits.map((v) => (
-                    <TableRow
-                      key={v.visit_id}
-                      className={
-                        v.symptoms
-                          ? "cursor-pointer hover:bg-muted/60 transition-colors"
-                          : undefined
-                      }
-                      onClick={() => handleRowClick(v)}
-                    >
-                      <TableCell className="text-sm whitespace-nowrap">
-                        {new Date(v.visit_date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {v.card_id}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {v.patient_name}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[160px] truncate">
-                        {v.symptoms || "—"}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground max-w-[160px] truncate">
-                        {v.advice || "—"}
-                      </TableCell>
-                      <TableCell>
-                        {!v.symptoms ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddRx(v);
-                            }}
-                          >
-                            Add Rx
-                          </Button>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">
-                            Done
-                          </Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {visits.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6}>
-                        <EmptyState icon={Calendar} title="No visits yet" />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableWrapper>
-          )}
-        </CardContent>
-      </Card>
+      <VisitsTable
+        visits={visits}
+        loading={loading}
+        handleRowClick={handleRowClick}
+        handleAddRx={handleAddRx}
+      />
 
       {/* ── New Visit Dialog ────────────────────────────────── */}
       <Dialog

@@ -172,6 +172,34 @@ CREATE TABLE IF NOT EXISTS token (
   FOREIGN KEY (visit_id) REFERENCES outdoor_visit(visit_id)
 );
 
+-- Token Item (medicines linked to a token) ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS token_item (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    token_id INT NOT NULL,
+    medicine_id INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    
+    -- Links this item to a specific dispensation token
+    CONSTRAINT fk_token 
+        FOREIGN KEY (token_id) REFERENCES token(token_id) 
+        ON DELETE CASCADE,
+        
+    -- Links this item to the specific medicine being dispensed
+    CONSTRAINT fk_medicine 
+        FOREIGN KEY (medicine_id) REFERENCES medicine(medicine_id)
+);
+
+
+-- ── Substore Inventory ──────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS substore_inventory (
+  medicine_id  INT      NOT NULL,
+  quantity     INT      NOT NULL DEFAULT 0,
+  last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                         ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (medicine_id),
+  FOREIGN KEY (medicine_id) REFERENCES medicine(medicine_id)
+);
+
 -- ── Medicine Dispensation ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS medicine_dispensation (
   dispensation_id     INT         NOT NULL AUTO_INCREMENT,
