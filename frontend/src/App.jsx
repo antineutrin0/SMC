@@ -10,6 +10,7 @@ import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { PageLoader } from "./components/shared";
+import StudentVerificationPage from "./components/doctor/StudentVerfication";
 
 // ─── Lazy load pages ──────────────────────────────────────────
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -31,6 +32,7 @@ const DoctorVisitsPage = lazy(() => import("./pages/doctor/DoctorVisitsPage"));
 const DoctorMedicinesPage = lazy(
   () => import("./pages/doctor/DoctorMedicinesPage"),
 );
+const VerifyStudent = lazy(() => import("./components/doctor/StudentVerfication"));
 
 // Nurse
 const NurseTokensPage = lazy(() => import("./pages/nurse/NurseTokensPage"));
@@ -174,6 +176,7 @@ function AppRoutes() {
           {/* Doctor */}
           <Route element={<ProtectedRoute allowedRoles={["Doctor"]} />}>
             <Route path="medicines" element={<DoctorMedicinesPage />} />
+            <Route path="verify" element={<VerifyStudent />} />
           </Route>
 
           {/* Nurse */}
