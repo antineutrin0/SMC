@@ -146,35 +146,34 @@ const dispenseMedicine = async (req, res) => {
     for (const med of medicines) {
       if (!med.quantity || med.quantity <= 0) continue;
 
+      // Bug 2 fix — guard against insufficient substore stock
+      const [[{ stock }]] = await db.query(
+        "SELECT quantity AS stock FROM substore_inventory WHERE medicine_id = ?",
+        [med.medicineId]
+      );
+      if (!stock || stock < med.quantity) {
+        return badRequest(res, `Insufficient stock for medicine ID ${med.medicineId}`);
+      }
+
       // Record dispensation
       await db.query(
         `INSERT INTO medicine_dispensation (token_id, medicine_id, quantity_dispensed, dispensed_by, dispensed_time)
          VALUES (?, ?, ?, ?, NOW())`,
-        [tokenId, med.medicineId, med.quantity, employeeId],
+        [tokenId, med.medicineId, med.quantity, employeeId]
       );
 
-      // Deduct from inventory (FIFO by expiry)
+      // Deduct from substore inventory
       await db.query(
-        `UPDATE medicine_inventory
-         SET quantity = quantity - ?
-         WHERE medicine_id = ? AND quantity > 0
-         ORDER BY exp_date ASC
-         LIMIT 1`,
-        [med.quantity, med.medicineId],
-      );
-
-      // Record transaction
-      const [[{ total }]] = await db.query(
-        "SELECT COALESCE(SUM(quantity), 0) AS total FROM medicine_inventory WHERE medicine_id = ?",
-        [med.medicineId],
-      );
-
-      await db.query(
-        `INSERT INTO medicine_transaction (medicine_id, transaction_type, quantity, made_by, reference_type, reference_id, balance_after)
-         VALUES (?, 'OUT', ?, ?, 'Substore', ?, ?)`,
-        [med.medicineId, med.quantity, employeeId, String(tokenId), total],
+        "UPDATE substore_inventory SET quantity = quantity - ? WHERE medicine_id = ?",
+        [med.quantity, med.medicineId]
       );
     }
+
+    // mark token as Consumed
+    await db.query(
+      "UPDATE token SET status = 'Consumed' WHERE token_id = ?",
+      [tokenId]
+    );
 
     return ok(res, {}, "Medicine dispensed successfully");
   } catch (err) {
