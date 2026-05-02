@@ -9,7 +9,7 @@ const getVisits = async (req, res) => {
     const [rows] = await db.query(
       `SELECT ov.visit_id, ov.card_id, ov.visit_date,
               p.fullname  AS patient_name,
-              pr.prescription_id, pr.symptoms, pr.advice
+              pr.prescription_id, pr.symptoms, pr.advice, pr.hastoken
        FROM outdoor_visit ov
        JOIN MedicalCard mc ON ov.card_id = mc.CardID
        JOIN Person p        ON mc.PersonID = p.person_id
@@ -101,6 +101,12 @@ const createToken = async (req, res) => {
       "INSERT INTO token (visit_id, issued_time) VALUES (?, NOW())",
       [visitId]
     );
+
+    await db.query(
+      `UPDATE prescription SET hastoken = 1 WHERE visit_id = ?`,
+      [visitId]
+    );  
+
     // create token items
     if (Array.isArray(medications) && medications.length > 0) {
       for (const med of medications) {

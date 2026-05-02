@@ -24,13 +24,11 @@ export function VisitsTable({ visits, loading, handleRowClick, handleAddRx }) {
   const [tokenOpenFor, setTokenOpenFor] = useState(null);
   const [tokensCreated, setTokensCreated] = useState(new Set());
 
-  const handleOpenToken = (visit) => {
-    setTokenOpenFor(visit);
-  };
-
   const handleTokenCreated = (visitId) => {
     setTokensCreated((s) => new Set([...Array.from(s), visitId]));
   };
+
+  const handleOpenToken = (visit) => setTokenOpenFor(visit);
 
   return (
     <Card>
@@ -101,11 +99,15 @@ export function VisitsTable({ visits, loading, handleRowClick, handleAddRx }) {
                                 e.stopPropagation();
                                 handleOpenToken(v);
                               }}
-                              disabled={tokensCreated.has(v.visit_id)}
+                              disabled={!!v.hastoken || tokensCreated.has(v.visit_id)}
+                              className={
+                                !!v.hastoken || tokensCreated.has(v.visit_id)
+                                  ? "bg-gray-400 text-gray-800 border-gray-200"
+                                  : "bg-emerald-600 text-white hover:bg-emerald-700"
+                              }
                             >
-                              {tokensCreated.has(v.visit_id) ? "Token Created" : "Add Token"}
+                              {v.hastoken || tokensCreated.has(v.visit_id) ? "Token Created" : "Add Token"}
                             </Button>
-                            <Badge variant="outline" className="text-xs">Done</Badge>
                           </>
                         )}
                       </div>
