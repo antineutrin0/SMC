@@ -36,6 +36,7 @@ const NAV_BY_ROLE = {
   Nurse: [
     { label: "Pending Tokens", path: "/dashboard", icon: Pill },
     { label: "Dispensing History", path: "/dashboard/history", icon: FileText },
+    { label: "Medicine Requests", path: "/dashboard/requests", icon: Package },
   ],
   Registrar: [
     { label: "Inventory", path: "/dashboard", icon: Pill },

@@ -56,7 +56,7 @@ const getPendingTokens = async (req, res) => {
       WHERE t.status = 'Pending'
       ORDER BY t.issued_time ASC
     `);
-        const tokensMap = new Map();
+    const tokensMap = new Map();
 
     for (const row of rows) {
       if (!tokensMap.has(row.token_id)) {
@@ -87,12 +87,10 @@ const getPendingTokens = async (req, res) => {
     const result = Array.from(tokensMap.values());
 
     return ok(res, { data: result });
-
   } catch (err) {
     serverError(res, err, "nurse.getPendingTokens");
   }
 };
-
 
 // GET /api/nurse/prescription/:visitId
 const getPrescription = async (req, res) => {
@@ -239,7 +237,7 @@ const createRequisition = async (req, res) => {
       `INSERT INTO substore_requisition 
        (requisition_id, made_by, status)
        VALUES (?, ?, 'Pending')`,
-      [requisitionId, nurseId]
+      [requisitionId, nurseId],
     );
 
     // Insert items
@@ -248,19 +246,80 @@ const createRequisition = async (req, res) => {
         `INSERT INTO requisition_item 
          (requisition_id, medicine_id, quantity_asked)
          VALUES (?, ?, ?)`,
-        [requisitionId, item.medicineId, item.quantity]
+        [requisitionId, item.medicineId, item.quantity],
       );
     }
 
     await conn.commit();
 
     return ok(res, { requisitionId }, "Requisition created successfully");
-
   } catch (err) {
     await conn.rollback();
     serverError(res, err, "nurse.createRequisition");
   } finally {
     conn.release();
+  }
+};
+
+// GET /api/nurse/requisitions/history
+const getRequisitionHistory = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        sr.requisition_id,
+        sr.status,
+        sr.created_at,
+        sr.made_by,
+
+        e.fullname AS nurse_name,
+
+        ri.medicine_id,
+        ri.quantity_asked,
+        ri.quantity_approved,
+
+        m.name AS medicine_name
+
+      FROM substore_requisition sr
+      JOIN employee e 
+        ON sr.made_by = e.employee_id
+
+      LEFT JOIN requisition_item ri 
+        ON sr.requisition_id = ri.requisition_id
+
+      LEFT JOIN medicine m 
+        ON ri.medicine_id = m.medicine_id
+
+      ORDER BY sr.created_at DESC
+      LIMIT 50
+    `);
+
+    const map = new Map();
+
+    for (const row of rows) {
+      if (!map.has(row.requisition_id)) {
+        map.set(row.requisition_id, {
+          requisition_id: row.requisition_id,
+          nurse_id: row.made_by,
+          nurse_name: row.nurse_name,
+          status: row.status,
+          created_at: row.created_at,
+          items: [],
+        });
+      }
+
+      if (row.medicine_id) {
+        map.get(row.requisition_id).items.push({
+          medicine_id: row.medicine_id,
+          medicine_name: row.medicine_name,
+          quantity_asked: row.quantity_asked,
+          quantity_approved: row.quantity_approved,
+        });
+      }
+    }
+
+    return ok(res, { data: Array.from(map.values()) });
+  } catch (err) {
+    serverError(res, err, "nurse.getRequisitionHistory");
   }
 };
 
@@ -270,4 +329,5 @@ module.exports = {
   dispenseMedicine,
   getDispensationHistory,
   createRequisition,
+  getRequisitionHistory,
 };

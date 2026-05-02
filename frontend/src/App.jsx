@@ -35,6 +35,7 @@ const DoctorMedicinesPage = lazy(
 // Nurse
 const NurseTokensPage = lazy(() => import("./pages/nurse/NurseTokensPage"));
 const NurseHistoryPage = lazy(() => import("./pages/nurse/NurseHistoryPage"));
+const NurseRequestPage = lazy(() => import("./pages/nurse/NurseRequestPage"));
 
 // Pharmacist
 const PharmacistInventoryPage = lazy(
@@ -178,6 +179,7 @@ function AppRoutes() {
           {/* Nurse */}
           <Route element={<ProtectedRoute allowedRoles={["Nurse"]} />}>
             <Route path="history" element={<NurseHistoryPage />} />
+            <Route path="requests" element={<NurseRequestPage />} />
           </Route>
 
           {/* Pharmacist */}

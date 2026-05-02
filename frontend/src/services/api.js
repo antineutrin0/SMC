@@ -98,8 +98,10 @@ export const getPrescription = (visitId) =>
   get(`/nurse/prescription/${visitId}`);
 export const dispenseMedicine = (data) => post("/nurse/dispense", data);
 export const getNurseHistory = (nurseId) => get(`/nurse/${nurseId}/history`);
-
-
+export const createNurseMedicineRequest = (data) =>
+  post("/nurse/requisition", data);
+export const getRequisitionHistory = (nurseId) =>
+  get(`/nurse/requisition/history`);
 
 // ─── Pharmacist ──────────────────────────────────────────────
 
