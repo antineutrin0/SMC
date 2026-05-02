@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -25,7 +26,7 @@ import {
   TableRow,
 } from "../ui/table";
 import { Badge } from "../ui/badge";
-import { Pill, Clock } from "lucide-react";
+import { Pill, Clock, Search } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch, useMutation, useDisclosure } from "../../hooks";
 import {
@@ -34,6 +35,8 @@ import {
   dispenseMedicine,
 } from "../../services/api";
 import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
+import { TokenTable } from "./TokenTable";
+import { DispenseDialog } from "./DispenseDialog";
 
 export function PendingTokens() {
   const { user } = useAuth();
@@ -42,12 +45,18 @@ export function PendingTokens() {
   const [prescription, setPrescription] = useState(null);
   const [quantities, setQuantities] = useState({});
   const [prescLoading, setPrescLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, loading, refetch } = useFetch(getPendingTokens);
+  const { data, loading, refetch } = useFetch(getPendingTokens); // Assuming getPendingTokens is defined elsewhere
   const tokens = data?.data ?? [];
 
+  const filteredTokens = useMemo(() => {
+    return tokens.filter((t) =>
+      t.token_id.toString().includes(searchQuery.trim()),
+    );
+  }, [tokens, searchQuery]);
+
   const handleTokenClick = async (token) => {
-    console.log(token.visit_id);
     setSelectedToken(token);
     setPrescLoading(true);
     try {
@@ -55,7 +64,7 @@ export function PendingTokens() {
       setPrescription(presc.data);
       const init = {};
       presc.data.medications?.forEach((m) => {
-        init[m.medicine_id] = m.dosage_amount * m.duration_day * m.frequency;
+        init[m.medicine_id] = m.duration_day * m.frequency;
       });
       setQuantities(init);
       open();
@@ -91,6 +100,7 @@ export function PendingTokens() {
   };
 
   return (
+    // Assuming Card, CardHeader, CardTitle, CardDescription, CardContent are defined elsewhere
     <>
       <Card>
         <CardHeader>
@@ -98,166 +108,38 @@ export function PendingTokens() {
           <CardDescription>
             Patients waiting for medicine collection
           </CardDescription>
+          <div className="relative max-w-sm mb-4">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search by Token ID..."
+              className="pl-8 h-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
             <LoadingSpinner className="py-10" />
           ) : (
-            <TableWrapper>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Token</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead className="hidden sm:table-cell">
-                      Card ID
-                    </TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Symptoms
-                    </TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tokens.map((t) => (
-                    <TableRow key={t.token_id}>
-                      <TableCell>
-                        <Badge>#{t.token_id}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {t.patient_name}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell font-mono text-xs">
-                        {t.card_id}
-                      </TableCell>
-                      <TableCell>
-                        <span className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
-                          <Clock className="w-3.5 h-3.5" />
-                          {new Date(t.issued_time).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                        {t.symptoms || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => handleTokenClick(t)}
-                          disabled={prescLoading}
-                        >
-                          <Pill className="w-3.5 h-3.5 mr-1.5" />
-                          Dispense
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {tokens.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6}>
-                        <EmptyState
-                          icon={Pill}
-                          title="No pending tokens"
-                          description="All medicines have been dispensed"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableWrapper>
+            <TokenTable
+              tokens={filteredTokens}
+              onDispense={handleTokenClick}
+              prescLoading={prescLoading}
+            />
           )}
         </CardContent>
       </Card>
-
-      {/* Dispense Dialog */}
-      <Dialog open={isOpen} onOpenChange={(v) => !v && close()}>
-        <DialogContent className="max-w-lg w-full max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Dispense Medicine</DialogTitle>
-            <DialogDescription>
-              Token #{selectedToken?.token_id} — {selectedToken?.patient_name}
-            </DialogDescription>
-          </DialogHeader>
-
-          {prescription && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 p-3 bg-blue-50 rounded-lg text-sm">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">
-                    SYMPTOMS
-                  </p>
-                  <p>{prescription.symptoms}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">
-                    ADVICE
-                  </p>
-                  <p>{prescription.advice || "—"}</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label>Prescribed Medications</Label>
-                {prescription.medications?.map((med) => (
-                  <div
-                    key={med.medicine_id}
-                    className="border rounded-lg p-3 space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-medium text-sm">
-                          {med.medicine_name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {med.generic_name}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="text-xs shrink-0">
-                        {med.available_quantity} available
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {med.dosage_amount}
-                      {med.dosage_unit} × {med.frequency}/day ×{" "}
-                      {med.duration_day} days
-                    </p>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Quantity to Dispense</Label>
-                      <Input
-                        type="number"
-                        value={quantities[med.medicine_id] || 0}
-                        onChange={(e) =>
-                          setQuantities((q) => ({
-                            ...q,
-                            [med.medicine_id]: parseInt(e.target.value) || 0,
-                          }))
-                        }
-                        max={med.available_quantity}
-                        min={0}
-                        className="h-8 w-32"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={close}>
-                  Cancel
-                </Button>
-                <Button onClick={handleDispense} disabled={dispensing}>
-                  <Pill className="w-4 h-4 mr-1.5" />
-                  {dispensing ? "Dispensing…" : "Confirm Dispense"}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <DispenseDialog
+        isOpen={isOpen}
+        onClose={close}
+        selectedToken={selectedToken}
+        prescription={prescription}
+        quantities={quantities}
+        dispensing={dispensing}
+        onConfirm={handleDispense}
+      />
     </>
   );
 }
