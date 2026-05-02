@@ -14,7 +14,7 @@ import {
   User,
   Stethoscope,
 } from "lucide-react";
-import { StatChip } from "../shared";
+import { StatChip } from ".";
 
 // ── Dummy prescription data (replace with API call later) ─────
 const DUMMY_PRESCRIPTIONS = [

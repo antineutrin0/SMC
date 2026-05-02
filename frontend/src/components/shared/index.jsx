@@ -119,3 +119,7 @@ export function StatChip({ icon, label, value }) {
     </div>
   );
 }
+
+export { NumericInput } from "./NumericInput";
+export { FirstAidRequestDialog } from "./FirstAidRequestDialog";
+export { SearchBar, useSearch } from "./SearchBar";

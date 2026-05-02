@@ -24,150 +24,67 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-import { Badge } from "../ui/badge";
-import { Plus, Trash2, Calendar } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch, useMutation, useForm, useDisclosure } from "../../hooks";
-import { useEffect } from "react";
 import {
   getDoctorVisits,
   createVisit,
   createPrescription,
   getMedicines,
 } from "../../services/api";
-import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
+import MedicationRow from "./MedicationRow";
+import VisitsTable from "./VisitsTable";
+import { PrescriptionDialog } from "../shared/PrescriptionDialog";
 
+// ── Constants ─────────────────────────────────────────────────
 const EMPTY_MED = {
   medicineId: "",
   dosageAmount: "",
   dosageUnit: "mg",
-  durationDay: "",
-  frequency: "",
+  durationDay: 1,   // start at 1, never below 1
+  frequency: 1,     // start at 1, never below 1
 };
 
-function MedicationRow({ med, index, medicines, onChange, onRemove }) {
-  return (
-    <div className="border rounded-lg p-3 space-y-3 bg-gray-50">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs">Medicine</Label>
-          <Select
-            value={med.medicineId}
-            onValueChange={(v) => onChange(index, "medicineId", v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select medicine" />
-            </SelectTrigger>
-            <SelectContent>
-              {medicines.map((m) => (
-                <SelectItem key={m.medicine_id} value={String(m.medicine_id)}>
-                  {m.name} ({m.total_quantity ?? 0} left)
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label className="text-xs">Dosage</Label>
-            <Input
-              type="number"
-              placeholder="500"
-              value={med.dosageAmount}
-              onChange={(e) => onChange(index, "dosageAmount", e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Unit</Label>
-            <Select
-              value={med.dosageUnit}
-              onValueChange={(v) => onChange(index, "dosageUnit", v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mg">mg</SelectItem>
-                <SelectItem value="ml">ml</SelectItem>
-                <SelectItem value="unit">unit</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-3 gap-3 items-end">
-        <div className="space-y-1">
-          <Label className="text-xs">Duration (days)</Label>
-          <Input
-            type="number"
-            placeholder="7"
-            value={med.durationDay}
-            onChange={(e) => onChange(index, "durationDay", e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Frequency/day</Label>
-          <Input
-            type="number"
-            placeholder="3"
-            value={med.frequency}
-            onChange={(e) => onChange(index, "frequency", e.target.value)}
-          />
-        </div>
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          onClick={() => onRemove(index)}
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
 
+
+// ── DoctorVisits ──────────────────────────────────────────────
 export function DoctorVisits() {
   const { user } = useAuth();
-  const visitModal = useDisclosure();
-  const prescModal = useDisclosure();
-  const [selectedVisit, setSelectedVisit] = useState(null);
+
+  // Modal states
+  const visitModal = useDisclosure();  // New visit dialog
+  const prescModal = useDisclosure();  // Create prescription dialog
+  const viewModal  = useDisclosure();  // View prescription dialog (read-only)
+
+  // Selected visit for each dialog — kept separate to avoid conflicts
+  const [rxVisit,   setRxVisit]   = useState(null); // for create Rx
+  const [viewVisit, setViewVisit] = useState(null); // for view Rx
+
   const [medications, setMedications] = useState([]);
-  console.log("User", user);
-const {
-  data: visitsres,
-  loading,
-  refetch,
-} = useFetch(
-  useCallback(() => {
-    if (!user?.id) return Promise.resolve(null);
-    return getDoctorVisits(user.id);
-  }, [user?.id])
-);
 
-  const visits = visitsres?.data || [];
-  const { data: medicineres } = useFetch(getMedicines);
-  const medicines = medicineres?.data || [];
+  // ── Data fetching ───────────────────────────────────────────
+  const { data: visitsRes, loading, refetch } = useFetch(
+    useCallback(() => {
+      if (!user?.id) return Promise.resolve(null);
+      return getDoctorVisits(user.id);
+    }, [user?.id]),
+  );
+  const visits = visitsRes?.data || [];
 
-  const {
-    values: visitForm,
-    setValue: setVF,
-    reset: resetVF,
-  } = useForm({ cardId: "" });
-  const {
-    values: rxForm,
-    setValue: setRx,
-    reset: resetRx,
-  } = useForm({ symptoms: "", advice: "" });
+  const { data: medicineRes } = useFetch(getMedicines);
+  const medicines = medicineRes?.data || [];
 
+  // ── Forms ───────────────────────────────────────────────────
+  const { values: visitForm, setValue: setVF, reset: resetVF } = useForm({
+    cardId: "",
+  });
+  const { values: rxForm, setValue: setRx, reset: resetRx } = useForm({
+    symptoms: "",
+    advice: "",
+  });
+
+  // ── Mutations ───────────────────────────────────────────────
   const { mutate: submitVisit, loading: visitLoading } = useMutation(
     createVisit,
     {
@@ -175,7 +92,7 @@ const {
         if (result?.success) {
           visitModal.close();
           resetVF();
-          setSelectedVisit({
+          setRxVisit({
             visit_id: result.data.visitId,
             card_id: visitForm.cardId,
           });
@@ -185,7 +102,7 @@ const {
       },
     },
   );
-  
+
   const { mutate: submitRx, loading: rxLoading } = useMutation(
     createPrescription,
     {
@@ -194,12 +111,13 @@ const {
         prescModal.close();
         resetRx();
         setMedications([]);
-        setSelectedVisit(null);
+        setRxVisit(null);
         refetch();
       },
     },
   );
 
+  // ── Handlers ────────────────────────────────────────────────
   const handleVisitSubmit = (e) => {
     e.preventDefault();
     submitVisit({ cardId: visitForm.cardId, doctorId: user.id });
@@ -208,17 +126,29 @@ const {
   const handleRxSubmit = (e) => {
     e.preventDefault();
     submitRx({
-      visitId: selectedVisit.visit_id,
+      visitId: rxVisit.visit_id,
       symptoms: rxForm.symptoms,
       advice: rxForm.advice,
       medications: medications.map((m) => ({
-        medicineId: m.medicineId,
+        medicineId:   m.medicineId,
         dosageAmount: m.dosageAmount,
-        dosageUnit: m.dosageUnit,
-        durationDay: m.durationDay,
-        frequency: m.frequency,
+        dosageUnit:   m.dosageUnit,
+        durationDay:  m.durationDay,
+        frequency:    m.frequency,
       })),
     });
+  };
+
+  const handleAddRx = (visit) => {
+    setRxVisit(visit);
+    prescModal.open();
+  };
+
+  // Row click — only opens view dialog for completed visits
+  const handleRowClick = (visit) => {
+    if (!visit.symptoms) return;
+    setViewVisit(visit);
+    viewModal.open();
   };
 
   const updateMed = (i, field, val) => {
@@ -227,6 +157,14 @@ const {
     );
   };
 
+  const closeRxModal = () => {
+    prescModal.close();
+    resetRx();
+    setMedications([]);
+    setRxVisit(null);
+  };
+
+  // ── Render ───────────────────────────────────────────────────
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -237,85 +175,14 @@ const {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Consultation History</CardTitle>
-          <CardDescription>All patient visits you have handled</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <LoadingSpinner className="py-10" />
-          ) : (
-            <TableWrapper>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Card ID</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Symptoms
-                    </TableHead>
-                    <TableHead className="hidden lg:table-cell">
-                      Advice
-                    </TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visits.map((v) => (
-                    <TableRow key={v.visit_id}>
-                      <TableCell className="text-sm whitespace-nowrap">
-                        {new Date(v.visit_date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {v.card_id}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {v.patient_name}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[160px] truncate">
-                        {v.symptoms || "—"}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground max-w-[160px] truncate">
-                        {v.advice || "—"}
-                      </TableCell>
-                      <TableCell>
-                        {!v.symptoms && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedVisit(v);
-                              prescModal.open();
-                            }}
-                          >
-                            Add Rx
-                          </Button>
-                        )}
-                        {v.symptoms && (
-                          <Badge variant="outline" className="text-xs">
-                            Done
-                          </Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {visits.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6}>
-                        <EmptyState icon={Calendar} title="No visits yet" />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableWrapper>
-          )}
-        </CardContent>
-      </Card>
+      <VisitsTable
+        visits={visits}
+        loading={loading}
+        handleRowClick={handleRowClick}
+        handleAddRx={handleAddRx}
+      />
 
-      {/* New Visit Dialog */}
+      {/* ── New Visit Dialog ────────────────────────────────── */}
       <Dialog
         open={visitModal.isOpen}
         onOpenChange={(v) => !v && visitModal.close()}
@@ -339,11 +206,7 @@ const {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={visitModal.close}
-              >
+              <Button type="button" variant="outline" onClick={visitModal.close}>
                 Cancel
               </Button>
               <Button type="submit" disabled={visitLoading}>
@@ -354,16 +217,16 @@ const {
         </DialogContent>
       </Dialog>
 
-      {/* Prescription Dialog */}
+      {/* ── Create Prescription Dialog ──────────────────────── */}
       <Dialog
         open={prescModal.isOpen}
-        onOpenChange={(v) => !v && prescModal.close()}
+        onOpenChange={(v) => !v && closeRxModal()}
       >
         <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Prescription</DialogTitle>
             <DialogDescription>
-              Patient: {selectedVisit?.patient_name || selectedVisit?.card_id}
+              Patient: {rxVisit?.patient_name || rxVisit?.card_id}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleRxSubmit} className="space-y-4">
@@ -386,6 +249,8 @@ const {
                 onChange={(e) => setRx("advice", e.target.value)}
               />
             </div>
+
+            {/* Medications */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label>Medications (Rx)</Label>
@@ -421,17 +286,9 @@ const {
                 )}
               </div>
             </div>
+
             <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  prescModal.close();
-                  resetRx();
-                  setMedications([]);
-                  setSelectedVisit(null);
-                }}
-              >
+              <Button type="button" variant="outline" onClick={closeRxModal}>
                 Cancel
               </Button>
               <Button type="submit" disabled={rxLoading}>
@@ -441,6 +298,16 @@ const {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── View Prescription Dialog (read-only) ────────────── */}
+      <PrescriptionDialog
+        visit={viewVisit}
+        open={viewModal.isOpen}
+        onClose={() => {
+          viewModal.close();
+          setViewVisit(null);
+        }}
+      />
     </>
   );
 }

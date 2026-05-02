@@ -73,6 +73,8 @@ export const getDoctorVisits = (doctorId) => get(`/doctor/${doctorId}/visits`);
 export const createVisit = (data) => post("/doctor/visits", data);
 export const createPrescription = (data) => post("/doctor/prescriptions", data);
 export const getMedicines = () => get("/public/medicines");
+// Tokens
+export const createToken = (data) => post("/doctor/createtokens", data);
 
 // ─── Patient ─────────────────────────────────────────────────
 
@@ -84,6 +86,10 @@ export const getFirstAidRequests = (patientId) =>
   get(`/patient/${patientId}/first-aid`);
 export const createFirstAidRequest = (data) => post("/patient/first-aid", data);
 export const applyForMedicalCard = (data) => post("/patient/apply", data);
+export const getVisitPrescription = (visitId) =>
+  apiClient.get(`/visits/${visitId}/prescriptions`);
+export const getFirstAidRequestDetail = (requestId) =>
+  apiClient.get(`/first-aid/requests/${requestId}`);
 
 // ─── Nurse ───────────────────────────────────────────────────
 
@@ -92,6 +98,8 @@ export const getPrescription = (visitId) =>
   get(`/nurse/prescription/${visitId}`);
 export const dispenseMedicine = (data) => post("/nurse/dispense", data);
 export const getNurseHistory = (nurseId) => get(`/nurse/${nurseId}/history`);
+
+
 
 // ─── Pharmacist ──────────────────────────────────────────────
 
