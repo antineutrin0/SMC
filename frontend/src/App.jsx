@@ -10,6 +10,7 @@ import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { PageLoader } from "./components/shared";
+import StudentVerificationPage from "./components/doctor/StudentVerfication";
 
 // ─── Lazy load pages ──────────────────────────────────────────
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -31,10 +32,12 @@ const DoctorVisitsPage = lazy(() => import("./pages/doctor/DoctorVisitsPage"));
 const DoctorMedicinesPage = lazy(
   () => import("./pages/doctor/DoctorMedicinesPage"),
 );
+const VerifyStudent = lazy(() => import("./components/doctor/StudentVerfication"));
 
 // Nurse
 const NurseTokensPage = lazy(() => import("./pages/nurse/NurseTokensPage"));
 const NurseHistoryPage = lazy(() => import("./pages/nurse/NurseHistoryPage"));
+const NurseRequestPage = lazy(() => import("./pages/nurse/NurseRequestPage"));
 
 // Pharmacist
 const PharmacistInventoryPage = lazy(
@@ -173,11 +176,13 @@ function AppRoutes() {
           {/* Doctor */}
           <Route element={<ProtectedRoute allowedRoles={["Doctor"]} />}>
             <Route path="medicines" element={<DoctorMedicinesPage />} />
+            <Route path="verify" element={<VerifyStudent />} />
           </Route>
 
           {/* Nurse */}
           <Route element={<ProtectedRoute allowedRoles={["Nurse"]} />}>
             <Route path="history" element={<NurseHistoryPage />} />
+            <Route path="requests" element={<NurseRequestPage />} />
           </Route>
 
           {/* Pharmacist */}
