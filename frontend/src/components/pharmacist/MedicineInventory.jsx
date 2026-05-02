@@ -31,7 +31,7 @@ import {
   TableRow,
 } from "../ui/table";
 import { Badge } from "../ui/badge";
-import { Plus, Package, Pill } from "lucide-react";
+import { Plus, Package } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch, useMutation, useForm, useDisclosure } from "../../hooks";
 import {
@@ -39,7 +39,9 @@ import {
   addMedicine,
   addInventory,
 } from "../../services/api";
-import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
+import { LoadingSpinner } from "../shared";
+import InventoryTable from "./InventoryTable";
+import AddMedicineDialog from "../shared/AddMedicineDialog";
 
 function stockVariant(qty) {
   if (qty > 100) return "default";
@@ -117,121 +119,17 @@ export function MedicineInventory() {
       </CardHeader>
 
       <CardContent>
-        {loading ? (
-          <LoadingSpinner className="py-10" />
-        ) : (
-          <TableWrapper>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="hidden sm:table-cell">ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Generic
-                  </TableHead>
-                  <TableHead className="hidden lg:table-cell">
-                    Category
-                  </TableHead>
-                  <TableHead>Qty</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {medicines.map((m) => (
-                  <TableRow key={m.medicine_id}>
-                    <TableCell className="hidden sm:table-cell font-mono text-xs">
-                      {m.medicine_id}
-                    </TableCell>
-                    <TableCell className="font-medium">{m.name}</TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                      {m.generic_name}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm">
-                      {m.catagory}
-                    </TableCell>
-                    <TableCell className="font-semibold">
-                      {m.total_quantity ?? 0}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={stockVariant(m.total_quantity ?? 0)}>
-                        {stockLabel(m.total_quantity ?? 0)}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {medicines.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      <EmptyState
-                        icon={Pill}
-                        title="No medicines"
-                        description="Add a medicine to get started"
-                      />
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableWrapper>
-        )}
+        <InventoryTable medicines={medicines} loading={loading} />
       </CardContent>
 
-      {/* Add Medicine Dialog */}
-      <Dialog
+      <AddMedicineDialog
         open={addModal.isOpen}
-        onOpenChange={(v) => !v && addModal.close()}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Add New Medicine</DialogTitle>
-            <DialogDescription>
-              Register a new medicine in the system
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              submitMedicine(medForm);
-            }}
-            className="space-y-4"
-          >
-            <div className="space-y-1.5">
-              <Label>Medicine Name</Label>
-              <Input
-                placeholder="e.g. Paracetamol"
-                value={medForm.name}
-                onChange={(e) => setMed("name", e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Generic Name</Label>
-              <Input
-                placeholder="e.g. Acetaminophen"
-                value={medForm.genericName}
-                onChange={(e) => setMed("genericName", e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Category</Label>
-              <Input
-                placeholder="e.g. Painkiller"
-                value={medForm.category}
-                onChange={(e) => setMed("category", e.target.value)}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={addModal.close}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={addingMed}>
-                {addingMed ? "Adding…" : "Add Medicine"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+        onClose={addModal.close}
+        medForm={medForm}
+        setMed={setMed}
+        onSubmit={submitMedicine}
+        loading={addingMed}
+      />
 
       {/* Add Stock Dialog */}
       <Dialog

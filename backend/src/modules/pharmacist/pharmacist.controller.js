@@ -254,14 +254,14 @@ const processRequisition = async (req, res) => {
       );
 
       await db.query(
-        `INSERT INTO medicine_transaction (medicine_id, transaction_type, quantity, made_by, reference_type, reference, balance_after)
+        `INSERT INTO medicine_transaction (medicine_id, transaction_type, quantity, made_by, reference_type, reference_id, balance_after)
          VALUES (?, 'OUT', ?, ?, 'Substore', ?, ?)`,
         [item.medicine_id, item.quantity, employeeId, id, total],
       );
     }
 
     await db.query(
-      "UPDATE substore_requisition SET status = 'PROCESSED' WHERE requisition_id = ?",
+      "UPDATE substore_requisition SET status = 'Processed' WHERE requisition_id = ?",
       [id],
     );
     return ok(res, {}, "Requisition processed");

@@ -3,7 +3,7 @@ const ctrl     = require("./nurse.controller");
 const { verifyToken, requireRole } = require("../../middleware/auth");
 const validate = require("../../middleware/validate");
 
-router.use(verifyToken, requireRole("Nurse"));
+router.use(verifyToken, requireRole("Nurse","Doctor"));
 
 router.get("/tokens/pending",          ctrl.getPendingTokens);
 router.get("/prescription/:visitId",   ctrl.getPrescription);
