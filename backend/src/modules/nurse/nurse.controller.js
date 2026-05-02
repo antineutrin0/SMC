@@ -208,9 +208,66 @@ const getDispensationHistory = async (req, res) => {
   }
 };
 
+// POST /api/nurse/requisition
+const createRequisition = async (req, res) => {
+  const conn = await db.getConnection(); // important for transaction
+
+  try {
+    const nurseId = req.user.id;
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return badRequest(res, "Items are required");
+    }
+
+    // Validate items
+    for (const item of items) {
+      if (!item.medicineId || !item.quantity || item.quantity <= 0) {
+        return badRequest(res, "Invalid medicine data");
+      }
+    }
+
+    // Generate requisition ID → REQYYYYMMDD-XXXX
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const randomPart = Math.floor(1000 + Math.random() * 9000);
+    const requisitionId = `REQ${datePart}-${randomPart}`;
+
+    await conn.beginTransaction();
+
+    // Insert into substore_requisition
+    await conn.query(
+      `INSERT INTO substore_requisition 
+       (requisition_id, made_by, status)
+       VALUES (?, ?, 'Pending')`,
+      [requisitionId, nurseId]
+    );
+
+    // Insert items
+    for (const item of items) {
+      await conn.query(
+        `INSERT INTO requisition_item 
+         (requisition_id, medicine_id, quantity_asked)
+         VALUES (?, ?, ?)`,
+        [requisitionId, item.medicineId, item.quantity]
+      );
+    }
+
+    await conn.commit();
+
+    return ok(res, { requisitionId }, "Requisition created successfully");
+
+  } catch (err) {
+    await conn.rollback();
+    serverError(res, err, "nurse.createRequisition");
+  } finally {
+    conn.release();
+  }
+};
+
 module.exports = {
   getPendingTokens,
   getPrescription,
   dispenseMedicine,
   getDispensationHistory,
+  createRequisition,
 };

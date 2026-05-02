@@ -22,7 +22,7 @@ const notFound = (res, message = "Not found") =>
 
 const serverError = (res, error, context = "") => {
   console.error(`[ERROR] ${context}:`, error);
-  res.status(500).json({ success: false, message: "Internal server error" });
+  res.status(500).json({ success: false, message: "Internal server error: " + error.message || "An error occurred" });
 };
 
 module.exports = { ok, created, badRequest, unauthorized, forbidden, notFound, serverError };

@@ -17,6 +17,14 @@ const verifyToken = (req, res, next) => {
   try {
     const decoded = verify(token);
     req.user = decoded;
+    //console.log("DECODED:", decoded);
+//     DECODED: {
+//   id: 'NUR001',
+//   role: 'Nurse',
+//   name: 'Ms. Taslima Khanam',
+//   iat: 1777752677,
+//   exp: 1778357477
+// }
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
