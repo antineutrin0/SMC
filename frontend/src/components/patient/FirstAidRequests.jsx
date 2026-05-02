@@ -145,11 +145,17 @@ export function FirstAidRequests() {
                       <TableCell className="hidden sm:table-cell text-sm max-w-[200px] truncate">
                         {r.trip_details}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusVariant(r.statue)}>
-                          {r.statue}
-                        </Badge>
-                      </TableCell>
+                     <TableCell>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          r.statue === "APPROVED"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {r.statue}
+                      </span>
+                    </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {r.items?.map((item, i) => (
                           <p key={i} className="text-xs text-muted-foreground">
