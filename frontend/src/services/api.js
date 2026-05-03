@@ -121,5 +121,5 @@ export const getAmbulanceLogs = (driverId) => get(`/driver/${driverId}/logs`);
 export const createAmbulanceLog = (data) => post("/driver/logs", data);
 export const updateAmbulanceLog = (id, data) =>
   patch(`/driver/logs/${id}`, data);
-export const completeTrip = (id, returnTime) =>
-  patch(`/driver/logs/${id}/complete`, { returnTime });
+export const completeTrip = (id, returnTime, finalKms) =>
+  patch(`/driver/logs/${id}/complete`, { returnTime, finalKms });
