@@ -245,7 +245,10 @@ CREATE TABLE IF NOT EXISTS first_aid_request (
   document_url VARCHAR(255),
   request_date DATE         NOT NULL,
   approved_by  VARCHAR(12),
-  statue       ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
+  approved_date Timestamp,
+  processed_by varchar(12), -- doctor id
+  processed_date Timestamp,
+  statue       ENUM('PENDING','APPROVED','REJECTED', 'PROCESSED', 'DISPENSED') NOT NULL DEFAULT 'PENDING',
   PRIMARY KEY (request_id),
   FOREIGN KEY (requested_by) REFERENCES MedicalCard(CardID),
   FOREIGN KEY (approved_by)  REFERENCES employee(employee_id)
