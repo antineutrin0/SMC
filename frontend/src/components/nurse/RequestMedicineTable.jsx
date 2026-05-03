@@ -13,7 +13,7 @@ import { TableWrapper, EmptyState, getStatusVariant } from "../shared";
 export function RequestMedicineTable({ history }) {
   const formatDate = (date) => {
     if (!date) return "—";
-    return new Date(date).toLocaleDateString([], {
+    return new Date(date).toLocaleString([], {
       dateStyle: "short",
       timeStyle: "short",
     });
@@ -25,6 +25,7 @@ export function RequestMedicineTable({ history }) {
         <TableHeader>
           <TableRow>
             <TableHead>Request Date</TableHead>
+            <TableHead>Requested By</TableHead>
             <TableHead>Requested Items</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Decision Date</TableHead>
@@ -34,12 +35,15 @@ export function RequestMedicineTable({ history }) {
         <TableBody>
           {history.length > 0 ? (
             history.map((req) => (
-              <TableRow key={req.request_id}>
+              <TableRow key={req.requisition_id}>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-1.5 text-sm">
                     <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                    {formatDate(req.request_date)}
+                    {formatDate(req.created_at)}
                   </div>
+                </TableCell>
+                <TableCell className="text-sm">
+                  {req.requested_by_name || req.nurse_name || "—"}
                 </TableCell>
                 <TableCell>
                   <div className="space-y-1">
@@ -49,7 +53,10 @@ export function RequestMedicineTable({ history }) {
                           {item.medicine_name}
                         </span>
                         <span className="text-muted-foreground ml-1">
-                          (Qty: {item.quantity})
+                          (Asked: {item.quantity_asked}
+                          {req.status?.toUpperCase() === "PROCESSED" &&
+                            `, Appr: ${item.quantity_approved}`}
+                          )
                         </span>
                       </div>
                     ))}
@@ -61,7 +68,7 @@ export function RequestMedicineTable({ history }) {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {req.status !== "PENDING"
+                  {req.status?.toUpperCase() !== "PENDING"
                     ? formatDate(req.decision_date)
                     : "Waiting..."}
                 </TableCell>
@@ -72,7 +79,7 @@ export function RequestMedicineTable({ history }) {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5}>
+              <TableCell colSpan={6}>
                 <EmptyState
                   icon={History}
                   title="No request history"

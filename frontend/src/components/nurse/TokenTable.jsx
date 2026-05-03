@@ -19,6 +19,7 @@ export function TokenTable({ tokens, onDispense, prescLoading }) {
           <TableRow>
             <TableHead>Token</TableHead>
             <TableHead>Patient</TableHead>
+            <TableHead>Doctor</TableHead>
             <TableHead className="hidden sm:table-cell">Card ID</TableHead>
             <TableHead>Arrival Time</TableHead>
             <TableHead className="text-right">Action</TableHead>
@@ -26,11 +27,14 @@ export function TokenTable({ tokens, onDispense, prescLoading }) {
         </TableHeader>
         <TableBody>
           {tokens.map((t) => (
-            <TableRow key={t.token_id}>
+            <TableRow key={t.token_uuid}>
               <TableCell>
-                <Badge>#{t.token_id}</Badge>
+                <Badge variant="outline" className="font-mono">
+                  #{t.token_uuid}
+                </Badge>
               </TableCell>
               <TableCell className="font-medium">{t.patient_name}</TableCell>
+              <TableCell className="text-sm">{t.doctor_name}</TableCell>
               <TableCell className="hidden sm:table-cell font-mono text-xs">
                 {t.card_id}
               </TableCell>

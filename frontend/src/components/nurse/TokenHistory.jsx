@@ -19,11 +19,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useFetch } from "../../hooks";
 import { getNurseHistory } from "../../services/api";
 import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
-import { useCallback } from "react";
-import { use } from "react";
-import { useState } from "react";
-import { useEffect } from "react";
-// import { get } from "../../../../backend/server";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export function TokenHistory() {
   const { user } = useAuth();
@@ -74,11 +71,9 @@ export function TokenHistory() {
                 <TableRow>
                   <TableHead>Token</TableHead>
                   <TableHead>Patient</TableHead>
+                  <TableHead>Doctor</TableHead>
                   <TableHead className="hidden sm:table-cell">
-                    Medicine
-                  </TableHead>
-                  <TableHead className="hidden sm:table-cell">
-                    Quantity
+                    Medicines Dispensed
                   </TableHead>
                   <TableHead>Time</TableHead>
                 </TableRow>
@@ -86,11 +81,11 @@ export function TokenHistory() {
               <TableBody>
                 {history.length > 0 ? (
                   history.map((item) => (
-                    <TableRow
-                      key={`${item.token_id}-${item.medicine_name}-${item.dispensed_time}`}
-                    >
+                    <TableRow key={item.token_uuid}>
                       <TableCell>
-                        <Badge>#{item.token_id}</Badge>
+                        <Badge variant="outline" className="font-mono">
+                          #{item.token_uuid}
+                        </Badge>
                       </TableCell>
                       <TableCell className="font-medium">
                         {item.patient_name}
@@ -98,11 +93,22 @@ export function TokenHistory() {
                           {item.card_id}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {item.medicine_name}
+                      <TableCell className="text-sm">
+                        {item.doctor_name}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        {item.quantity_dispensed}
+                        <div className="space-y-1">
+                          {item.items?.map((med, idx) => (
+                            <div key={idx} className="text-xs">
+                              <span className="font-medium">
+                                {med.medicine_name}
+                              </span>
+                              <span className="text-muted-foreground ml-1">
+                                ({med.quantity})
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <span className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">

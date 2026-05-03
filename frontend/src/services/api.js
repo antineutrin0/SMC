@@ -101,7 +101,7 @@ export const getNurseHistory = (nurseId) => get(`/nurse/${nurseId}/history`);
 export const createNurseMedicineRequest = (data) =>
   post("/nurse/requisition", data);
 export const getRequisitionHistory = (nurseId) =>
-  get(`/nurse/requisition/history`);
+  get(`/pharmacist/requisitions`);
 
 // ─── Pharmacist ──────────────────────────────────────────────
 

@@ -25,7 +25,7 @@ export function DispenseDialog({
         <DialogHeader>
           <DialogTitle>Dispense Medicine</DialogTitle>
           <DialogDescription>
-            Token #{selectedToken?.token_id} — {selectedToken?.patient_name}
+            Token #{selectedToken?.token_uuid} — {selectedToken?.patient_name}
           </DialogDescription>
         </DialogHeader>
 
@@ -40,6 +40,12 @@ export function DispenseDialog({
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-1">
+                  DOCTOR
+                </p>
+                <p>{selectedToken?.doctor_name}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs font-medium text-muted-foreground mb-1">
                   ADVICE
                 </p>
                 <p>{prescription.advice || "—"}</p>
@@ -47,30 +53,22 @@ export function DispenseDialog({
             </div>
 
             <div className="space-y-3">
-              <Label>Prescribed Medications</Label>
-              {prescription.medications?.map((med) => (
+              <Label>Items to Dispense</Label>
+              {selectedToken?.items?.map((item) => (
                 <div
-                  key={med.medicine_id}
+                  key={item.medicine_id}
                   className="border rounded-lg p-3 space-y-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-medium text-sm">{med.medicine_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {med.generic_name}
+                      <p className="font-medium text-sm">
+                        {item.medicine_name}
                       </p>
                     </div>
-                    <Badge variant="outline" className="text-xs shrink-0">
-                      {med.available_quantity} available
-                    </Badge>
                   </div>
-                  <div className="flex justify-between items-center bg-muted/50 p-2 rounded">
-                    <span className="text-xs text-muted-foreground italic">
-                      {med.dosage_amount} {med.dosage_unit} × {med.frequency}
-                      /day × {med.duration_day} days
-                    </span>
+                  <div className="flex justify-end items-center bg-muted/50 p-2 rounded">
                     <div className="text-sm font-semibold">
-                      Qty: {quantities[med.medicine_id]}
+                      Dispensing Quantity: {item.quantity}
                     </div>
                   </div>
                 </div>
