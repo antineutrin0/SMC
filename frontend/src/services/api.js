@@ -110,6 +110,9 @@ export const createNurseMedicineRequest = (data) =>
 export const getRequisitionHistory = (nurseId) =>
   get(`/pharmacist/requisitions`);
 export const getSubstoreInventory = () => get("/nurse/substore-inventory");
+export const getProcessedFirstAidRequestsNurse = () => get("/nurse/first-aid/processed");
+export const dispenseFirstAidRequest = (id) =>
+  post(`/nurse/first-aid/${id}/dispense`);
 
 // ─── Pharmacist ──────────────────────────────────────────────
 

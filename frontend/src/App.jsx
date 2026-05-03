@@ -51,6 +51,9 @@ const NurseRequestPage = lazy(() => import("./pages/nurse/NurseRequestPage"));
 const NurseSubstoreInventoryPage = lazy(
   () => import("./pages/nurse/NurseSubstoreInventoryPage"),
 );
+const NurseFirstAidDispensePage = lazy(
+  () => import("./pages/nurse/NurseFirstAidDispensePage"),
+);
 
 // Pharmacist
 const PharmacistInventoryPage = lazy(
@@ -199,6 +202,7 @@ function AppRoutes() {
             <Route path="history" element={<NurseHistoryPage />} />
             <Route path="requests" element={<NurseRequestPage />} />
             <Route path="inventory" element={<NurseSubstoreInventoryPage/>}/>
+            <Route path="first-aid" element={<NurseFirstAidDispensePage />} />
           </Route>
 
           {/* Pharmacist */}

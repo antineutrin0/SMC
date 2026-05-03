@@ -370,7 +370,7 @@ const getRequisitionHistory = async (req, res) => {
 };
 
 
-// GET /nurse/first-aid/processed
+// GET api/nurse/first-aid/processed
 const getProcessedFirstAidRequests = async (req, res) => {
   try {
     const [rows] = await db.query(
