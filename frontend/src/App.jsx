@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { PageLoader } from "./components/shared";
 import StudentVerificationPage from "./components/doctor/StudentVerfication";
+import SubstoreInventory from "./components/nurse/SubstoreInventory";
 import { FirstAidRequests } from "./components/doctor/FirstAidRequests";
 
 // ─── Lazy load pages ──────────────────────────────────────────
@@ -39,6 +40,9 @@ const VerifyStudent = lazy(() => import("./components/doctor/StudentVerfication"
 const NurseTokensPage = lazy(() => import("./pages/nurse/NurseTokensPage"));
 const NurseHistoryPage = lazy(() => import("./pages/nurse/NurseHistoryPage"));
 const NurseRequestPage = lazy(() => import("./pages/nurse/NurseRequestPage"));
+const NurseSubstoreInventoryPage = lazy(
+  () => import("./pages/nurse/NurseSubstoreInventoryPage"),
+);
 
 // Pharmacist
 const PharmacistInventoryPage = lazy(
@@ -185,6 +189,7 @@ function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={["Nurse"]} />}>
             <Route path="history" element={<NurseHistoryPage />} />
             <Route path="requests" element={<NurseRequestPage />} />
+            <Route path="inventory" element={<NurseSubstoreInventoryPage/>}/>
           </Route>
 
           {/* Pharmacist */}

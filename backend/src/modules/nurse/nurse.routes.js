@@ -15,6 +15,7 @@ router.post(
 router.get("/:nurseId/history", ctrl.getDispensationHistory);
 router.post("/requisition", ctrl.createRequisition);
 router.get("/requisition/history", ctrl.getRequisitionHistory);
+router.get("/substore-inventory", ctrl.getSubstoreInventory);
 
 // Processed First Aid Requests
 router.get("/first-aid/processed", ctrl.getProcessedFirstAidRequests);

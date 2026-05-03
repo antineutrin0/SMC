@@ -5,6 +5,7 @@ const {
   serverError,
   badRequest,
 } = require("../../utils/response");
+const { get } = require("./nurse.routes");
 
 // GET /api/nurse/tokens/pending
 /*
@@ -54,7 +55,7 @@ const getPendingTokens = async (req, res) => {
       LEFT JOIN medicine m    ON ti.medicine_id = m.medicine_id
 
       WHERE t.status = 'Pending'
-      ORDER BY t.issued_time ASC
+      ORDER BY t.issued_time DESC
     `);
     const tokensMap = new Map();
 
@@ -499,6 +500,35 @@ const dispenseFirstAidRequest = async (req, res) => {
   }
 };
 
+// substore inventory for requisition form
+const getSubstoreInventory = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+          si.medicine_id,
+          m.name,
+          m.generic_name,
+          m.catagory,
+          si.quantity,
+          si.last_updated
+      FROM substore_inventory si
+      JOIN medicine m 
+          ON si.medicine_id = m.medicine_id
+      ORDER BY m.name ASC
+    `);
+    return ok(res, { data: rows }, "Substore inventory fetched successfully");
+    // return res.status(200).json({
+    //   success: true,
+    //   count: rows.length,
+    //   data: rows,
+    // });
+
+  } catch (error) {
+    console.error("Error fetching substore inventory:", error);
+    return serverError(res, error, "nurse.getSubstoreInventory");
+  }
+};
+
 module.exports = {
   getPendingTokens,
   getPrescription,
@@ -508,4 +538,5 @@ module.exports = {
   getRequisitionHistory,
   getProcessedFirstAidRequests,
   dispenseFirstAidRequest,
+  getSubstoreInventory,
 };
