@@ -108,7 +108,7 @@ const completeTrip = async (req, res) => {
     const { logId } = req.params;
     const { returnTime, finalKms } = req.body;
     const driverId = req.user.id;
-
+    console.log("Completing trip with data:", { logId, returnTime, finalKms });
     if (finalKms == null) {
       return badRequest(res, "finalKms is required");
     }
