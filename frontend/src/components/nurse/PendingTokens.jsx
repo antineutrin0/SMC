@@ -49,7 +49,7 @@ export function PendingTokens() {
 
   const { data, loading, refetch } = useFetch(getPendingTokens); // Assuming getPendingTokens is defined elsewhere
   const tokens = data?.data ?? [];
-
+  console.log("Pending Tokens:", tokens);
   const filteredTokens = useMemo(() => {
     return tokens.filter((t) =>
       t.token_uuid == null

@@ -41,9 +41,9 @@ export function TokenTable({ tokens, onDispense, prescLoading }) {
               <TableCell>
                 <span className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
                   <Clock className="w-3.5 h-3.5" />
-                  {new Date(t.issued_time).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
+                  {new Date(t.issued_time).toLocaleString([], {
+                    dateStyle: "medium",
+                    timeStyle: "short",
                   })}
                 </span>
               </TableCell>

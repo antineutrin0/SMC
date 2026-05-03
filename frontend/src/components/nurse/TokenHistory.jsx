@@ -114,7 +114,7 @@ export function TokenHistory() {
                         <span className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
                           <Clock className="w-3.5 h-3.5" />
                           {new Date(item.issued_time).toLocaleString([], {
-                            dateStyle: "short",
+                            dateStyle: "medium",
                             timeStyle: "short",
                           })}
                         </span>

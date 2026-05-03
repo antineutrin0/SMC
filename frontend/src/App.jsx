@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { PageLoader } from "./components/shared";
 import StudentVerificationPage from "./components/doctor/StudentVerfication";
+import SubstoreInventory from "./components/nurse/SubstoreInventory";
 
 // ─── Lazy load pages ──────────────────────────────────────────
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -183,6 +184,7 @@ function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={["Nurse"]} />}>
             <Route path="history" element={<NurseHistoryPage />} />
             <Route path="requests" element={<NurseRequestPage />} />
+            <Route path="inventory" element={<SubstoreInventory/>}/>
           </Route>
 
           {/* Pharmacist */}

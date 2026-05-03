@@ -104,6 +104,7 @@ export const createNurseMedicineRequest = (data) =>
   post("/nurse/requisition", data);
 export const getRequisitionHistory = (nurseId) =>
   get(`/pharmacist/requisitions`);
+export const getSubstoreInventory = () => get("/nurse/substore-inventory");
 
 // ─── Pharmacist ──────────────────────────────────────────────
 
