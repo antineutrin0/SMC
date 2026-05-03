@@ -11,5 +11,14 @@ router.post("/prescriptions",     validate(["visitId", "symptoms"]), ctrl.create
 router.get("/prescriptions/:visitId", ctrl.getPrescription);
 router.get("/medicines",          ctrl.getMedicines);
 router.post("/createtokens", validate(["visitId"]), ctrl.createToken);
+router.post(
 
+  "/first-aid/:requestId/process",
+
+  validate(["items"]),
+
+  ctrl.processFirstAidRequest
+
+);
+router.get("/first-aid/approved", ctrl.getApprovedFirstAidRequests);
 module.exports = router;
