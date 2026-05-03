@@ -368,6 +368,137 @@ const getRequisitionHistory = async (req, res) => {
   }
 };
 
+
+// GET /pharmacist/first-aid/processed
+const getProcessedFirstAidRequests = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT far.*, p.fullname
+       FROM first_aid_request far
+       JOIN MedicalCard mc ON far.requested_by = mc.CardID
+       JOIN Person p ON mc.PersonID = p.person_id
+       WHERE far.statue = 'PROCESSED'
+       ORDER BY far.processed_date DESC`
+    );
+
+    return ok(res, { data: rows });
+  } catch (err) {
+    serverError(res, err, "pharmacist.getProcessedFirstAidRequests");
+  }
+};
+
+// POST /pharmacist/first-aid/:requestId/dispense
+const dispenseFirstAidRequest = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    const { requestId } = req.params;
+    const pharmacistId = req.user.id;
+
+    await connection.beginTransaction();
+
+    // 1️⃣ Lock request
+    const [[request]] = await connection.query(
+      "SELECT * FROM first_aid_request WHERE request_id = ? FOR UPDATE",
+      [requestId]
+    );
+
+    if (!request) {
+      await connection.rollback();
+      return notFound(res, "Request not found");
+    }
+
+    if (request.statue !== "PROCESSED") {
+      await connection.rollback();
+      return badRequest(res, "Only processed requests can be dispensed");
+    }
+
+    // 2️⃣ Get items
+    const [items] = await connection.query(
+      "SELECT * FROM first_aid_item WHERE request_id = ?",
+      [requestId]
+    );
+
+    if (!items.length) {
+      await connection.rollback();
+      return badRequest(res, "No items found for this request");
+    }
+
+    // 3️⃣ Process each item
+    for (const item of items) {
+      const [[{ total }]] = await connection.query(
+        `SELECT COALESCE(SUM(quantity),0) AS total
+         FROM medicine_inventory
+         WHERE medicine_id = ?`,
+        [item.medicine_id]
+      );
+
+      if (total < item.quantity) {
+        await connection.rollback();
+        return badRequest(
+          res,
+          `Insufficient stock for medicine_id ${item.medicine_id}`
+        );
+      }
+
+      // Deduct from inventory (FIFO-style naive deduction)
+      let remaining = item.quantity;
+
+      const [batches] = await connection.query(
+        `SELECT inventory_id, quantity 
+         FROM medicine_inventory
+         WHERE medicine_id = ? 
+         ORDER BY exp_date ASC`,
+        [item.medicine_id]
+      );
+
+      for (const batch of batches) {
+        if (remaining <= 0) break;
+
+        const deduct = Math.min(batch.quantity, remaining);
+
+        await connection.query(
+          "UPDATE medicine_inventory SET quantity = quantity - ? WHERE inventory_id = ?",
+          [deduct, batch.inventory_id]
+        );
+
+        remaining -= deduct;
+      }
+
+      // Insert transaction log
+      await connection.query(
+        `INSERT INTO medicine_transaction 
+         (medicine_id, transaction_type, quantity, made_by, reference_type, reference_id, balance_after)
+         VALUES (?, 'OUT', ?, ?, 'FirstAid', ?, ?)`,
+        [
+          item.medicine_id,
+          item.quantity,
+          pharmacistId,
+          requestId,
+          total - item.quantity,
+        ]
+      );
+    }
+
+    // 4️⃣ Update request status
+    await connection.query(
+      `UPDATE first_aid_request 
+       SET statue = 'DISPENSED'
+       WHERE request_id = ?`,
+      [requestId]
+    );
+
+    await connection.commit();
+
+    return ok(res, {}, "First aid request dispensed successfully");
+  } catch (err) {
+    await connection.rollback();
+    serverError(res, err, "pharmacist.dispenseFirstAidRequest");
+  } finally {
+    connection.release();
+  }
+};
+
 module.exports = {
   getPendingTokens,
   getPrescription,
@@ -375,4 +506,6 @@ module.exports = {
   getDispensationHistory,
   createRequisition,
   getRequisitionHistory,
+  getProcessedFirstAidRequests,
+  dispenseFirstAidRequest,
 };

@@ -25,7 +25,7 @@ const NAV_BY_ROLE = {
     { label: "Visit History", path: "/dashboard/visits", icon: Calendar },
     {
       label: "First Aid Requests",
-      path: "/dashboard/firstaid",
+      path: "/dashboard/first-aid",
       icon: Ambulance,
     },
   ],
