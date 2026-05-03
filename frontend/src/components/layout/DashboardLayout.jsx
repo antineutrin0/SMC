@@ -53,6 +53,13 @@ const NAV_BY_ROLE = {
     { label: "Employees", path: "/dashboard/employees", icon: Users },
     { label: "Rosters", path: "/dashboard/rosters", icon: Calendar },
     { label: "Applications", path: "/dashboard/applications", icon: FileText },
+    { label: "Inventory", path: "/dashboard/inventory", icon: Pill },
+    { label: "Transactions", path: "/dashboard/transactions", icon: Activity },
+    {
+      label: "First Aid Requests",
+      path: "/dashboard/firstaidrequest",
+      icon: Package,
+    },
   ],
 };
 

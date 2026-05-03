@@ -26,6 +26,25 @@ const getMedicines = async (req, res) => {
   }
 };
 
+const getInventory = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+          mi.medicine_id,
+          COALESCE(SUM(mi.quantity), 0) AS total_quantity,
+          MIN(mi.exp_date)              AS nearest_expiry,
+          COUNT(mi.inventory_id)        AS batch_count
+       FROM medicine_inventory mi
+       GROUP BY mi.medicine_id
+       ORDER BY mi.medicine_id`,
+    );
+
+    return ok(res, { data: rows });
+  } catch (err) {
+    serverError(res, err, "pharmacist.getInventory");
+  }
+};
+
 // POST /api/pharmacist/medicines
 const addMedicine = async (req, res) => {
   try {
@@ -257,7 +276,6 @@ const getRequisitions = async (req, res) => {
     }
 
     return ok(res, { data: Array.from(map.values()) });
-
   } catch (err) {
     serverError(res, err, "pharmacist.getRequisitions");
   }
@@ -280,7 +298,7 @@ const processRequisition = async (req, res) => {
     if (status === "Rejected") {
       await conn.query(
         "UPDATE substore_requisition SET status = 'Rejected' WHERE requisition_id = ?",
-        [id]
+        [id],
       );
 
       await conn.commit();
@@ -296,7 +314,7 @@ const processRequisition = async (req, res) => {
         `UPDATE requisition_item 
          SET quantity_approved = ?
          WHERE requisition_id = ? AND medicine_id = ?`,
-        [item.approvedQuantity, id, item.medicineId]
+        [item.approvedQuantity, id, item.medicineId],
       );
 
       if (remaining <= 0) continue;
@@ -307,7 +325,7 @@ const processRequisition = async (req, res) => {
          FROM medicine_inventory
          WHERE medicine_id = ? AND quantity > 0
          ORDER BY exp_date ASC`,
-        [item.medicineId]
+        [item.medicineId],
       );
 
       for (const batch of batches) {
@@ -319,7 +337,7 @@ const processRequisition = async (req, res) => {
           `UPDATE medicine_inventory
            SET quantity = quantity - ?
            WHERE inventory_id = ?`,
-          [deduct, batch.inventory_id]
+          [deduct, batch.inventory_id],
         );
 
         remaining -= deduct;
@@ -328,9 +346,7 @@ const processRequisition = async (req, res) => {
       // ❗ Optional: handle insufficient stock
       if (remaining > 0) {
         //serverError(res, new Error(`Insufficient stock for medicine ID ${item.medicineId}`), "pharmacist.processRequisition");
-        throw new Error(
-          `Insufficient stock for medicine ${item.medicineId}`
-        );
+        throw new Error(`Insufficient stock for medicine ${item.medicineId}`);
       }
 
       // ✅ get new balance
@@ -338,7 +354,7 @@ const processRequisition = async (req, res) => {
         `SELECT COALESCE(SUM(quantity),0) AS total 
          FROM medicine_inventory 
          WHERE medicine_id = ?`,
-        [item.medicineId]
+        [item.medicineId],
       );
 
       // ✅ transaction log
@@ -346,13 +362,7 @@ const processRequisition = async (req, res) => {
         `INSERT INTO medicine_transaction
          (medicine_id, transaction_type, quantity, made_by, reference_type, reference_id, balance_after)
          VALUES (?, 'OUT', ?, ?, 'Requisition', ?, ?)`,
-        [
-          item.medicineId,
-          item.approvedQuantity,
-          employeeId,
-          id,
-          total,
-        ]
+        [item.medicineId, item.approvedQuantity, employeeId, id, total],
       );
     }
 
@@ -361,13 +371,12 @@ const processRequisition = async (req, res) => {
       `UPDATE substore_requisition 
        SET status = 'Processed' 
        WHERE requisition_id = ?`,
-      [id]
+      [id],
     );
 
     await conn.commit();
 
     return ok(res, {}, "Requisition processed successfully");
-
   } catch (err) {
     await conn.rollback();
     serverError(res, err, "pharmacist.processRequisition");
@@ -385,7 +394,7 @@ const getProcessedFirstAidRequests = async (req, res) => {
        JOIN MedicalCard mc ON far.requested_by = mc.CardID
        JOIN Person p ON mc.PersonID = p.person_id
        WHERE far.statue = 'PROCESSED'
-       ORDER BY far.processed_date DESC`
+       ORDER BY far.processed_date DESC`,
     );
 
     return ok(res, { data: rows });
@@ -407,7 +416,7 @@ const dispenseFirstAidRequest = async (req, res) => {
     // 1️⃣ Lock request
     const [[request]] = await connection.query(
       "SELECT * FROM first_aid_request WHERE request_id = ? FOR UPDATE",
-      [requestId]
+      [requestId],
     );
 
     if (!request) {
@@ -423,7 +432,7 @@ const dispenseFirstAidRequest = async (req, res) => {
     // 2️⃣ Get items
     const [items] = await connection.query(
       "SELECT * FROM first_aid_item WHERE request_id = ?",
-      [requestId]
+      [requestId],
     );
 
     if (!items.length) {
@@ -437,14 +446,14 @@ const dispenseFirstAidRequest = async (req, res) => {
         `SELECT COALESCE(SUM(quantity),0) AS total
          FROM medicine_inventory
          WHERE medicine_id = ?`,
-        [item.medicine_id]
+        [item.medicine_id],
       );
 
       if (total < item.quantity) {
         await connection.rollback();
         return badRequest(
           res,
-          `Insufficient stock for medicine_id ${item.medicine_id}`
+          `Insufficient stock for medicine_id ${item.medicine_id}`,
         );
       }
 
@@ -456,7 +465,7 @@ const dispenseFirstAidRequest = async (req, res) => {
          FROM medicine_inventory
          WHERE medicine_id = ? 
          ORDER BY exp_date ASC`,
-        [item.medicine_id]
+        [item.medicine_id],
       );
 
       for (const batch of batches) {
@@ -466,7 +475,7 @@ const dispenseFirstAidRequest = async (req, res) => {
 
         await connection.query(
           "UPDATE medicine_inventory SET quantity = quantity - ? WHERE inventory_id = ?",
-          [deduct, batch.inventory_id]
+          [deduct, batch.inventory_id],
         );
 
         remaining -= deduct;
@@ -483,7 +492,7 @@ const dispenseFirstAidRequest = async (req, res) => {
           pharmacistId,
           requestId,
           total - item.quantity,
-        ]
+        ],
       );
     }
 
@@ -492,7 +501,7 @@ const dispenseFirstAidRequest = async (req, res) => {
       `UPDATE first_aid_request 
        SET statue = 'DISPENSED'
        WHERE request_id = ?`,
-      [requestId]
+      [requestId],
     );
 
     await connection.commit();

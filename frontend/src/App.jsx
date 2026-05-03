@@ -26,13 +26,21 @@ const AdminRostersPage = lazy(() => import("./pages/admin/AdminRostersPage"));
 const AdminApplicationsPage = lazy(
   () => import("./pages/admin/AdminApplicationsPage"),
 );
-
+const AdminInventoryPage = lazy(
+  () => import("./pages/admin/AdminInventoryPage"),
+);
+// const AdminTransactionsPage = lazy(
+//   () => import("./pages/admin/AdminTransactionsPage"),
+// );
+// const AdminFirstAidPage = lazy(() => import("./pages/admin/AdminFirstAidPage"));
 // Doctor
 const DoctorVisitsPage = lazy(() => import("./pages/doctor/DoctorVisitsPage"));
 const DoctorMedicinesPage = lazy(
   () => import("./pages/doctor/DoctorMedicinesPage"),
 );
-const VerifyStudent = lazy(() => import("./components/doctor/StudentVerfication"));
+const VerifyStudent = lazy(
+  () => import("./components/doctor/StudentVerfication"),
+);
 
 // Nurse
 const NurseTokensPage = lazy(() => import("./pages/nurse/NurseTokensPage"));
@@ -171,6 +179,7 @@ function AppRoutes() {
             <Route path="employees" element={<AdminEmployeesPage />} />
             <Route path="rosters" element={<AdminRostersPage />} />
             <Route path="applications" element={<AdminApplicationsPage />} />
+            <Route path="inventory" element={<AdminInventoryPage />} />
           </Route>
 
           {/* Doctor */}
