@@ -53,6 +53,44 @@ const getVisits = async (req, res) => {
   }
 };
 
+const getPrescription = async (req, res) => {
+  try {
+    const { visitId } = req.params;
+
+    const [rows] = await db.query(
+      `SELECT pr.prescription_id, pr.symptoms, pr.advice, pr.created_at,
+              ov.card_id, ov.visit_date,
+              p.fullname  AS patient_name,
+              e.fullname AS doctor_name
+       FROM prescription pr
+       JOIN outdoor_visit ov ON pr.visit_id = ov.visit_id
+       JOIN MedicalCard mc   ON ov.card_id  = mc.CardID
+       JOIN Person p         ON mc.PersonID = p.person_id
+       JOIN employee e       ON ov.doctor_id = e.employee_id
+       WHERE pr.visit_id = ?`,
+      [visitId],
+    );
+    if (!rows.length) return notFound(res, "Prescription not found");
+
+    const [meds] = await db.query(
+      `SELECT med.medicine_id, med.dosage_amount, med.dosage_unit,
+              med.duration_day, med.frequency,
+              m.name AS medicine_name, m.generic_name,
+              COALESCE(SUM(mi.quantity), 0) AS available_quantity
+       FROM medication med
+       JOIN medicine m ON med.medicine_id = m.medicine_id
+       LEFT JOIN medicine_inventory mi ON m.medicine_id = mi.medicine_id
+       WHERE med.prescription_id = ?
+       GROUP BY med.medicine_id`,
+      [rows[0].prescription_id],
+    );
+
+    return ok(res, { data: { ...rows[0], medications: meds } });
+  } catch (err) {
+    serverError(res, err, "patient.getPrescription");
+  }
+};
+
 // POST /api/patient/apply  —  submit a new medical card application
 const applyForMedicalCard = async (req, res) => {
   try {
@@ -203,4 +241,5 @@ module.exports = {
   applyForMedicalCard,
   getFirstAidRequests,
   createFirstAidRequest,
+  getPrescription,
 };

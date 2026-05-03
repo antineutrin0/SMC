@@ -3,7 +3,7 @@ const ctrl = require("./pharmacist.controller");
 const { verifyToken, requireRole } = require("../../middleware/auth");
 const validate = require("../../middleware/validate");
 
-router.use(verifyToken, requireRole("Registrar", "Nurse", "Doctor"));
+router.use(verifyToken, requireRole("Registrar", "Nurse", "Doctor","Admin"));
 
 // Medicines
 router.get("/medicines", ctrl.getMedicines);

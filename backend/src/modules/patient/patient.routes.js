@@ -13,5 +13,5 @@ router.get("/:patientId/profile", ctrl.getProfile);
 router.get("/:patientId/visits",  ctrl.getVisits);
 router.get("/:patientId/first-aid", ctrl.getFirstAidRequests);
 router.post("/first-aid", validate(["tripDetails"]), ctrl.createFirstAidRequest);
-
+router.get("/prescription/:visitId", ctrl.getPrescription);
 module.exports = router;

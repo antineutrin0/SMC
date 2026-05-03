@@ -12,6 +12,7 @@ import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { PageLoader } from "./components/shared";
 import StudentVerificationPage from "./components/doctor/StudentVerfication";
 import SubstoreInventory from "./components/nurse/SubstoreInventory";
+import { FirstAidRequests } from "./components/doctor/FirstAidRequests";
 
 // ─── Lazy load pages ──────────────────────────────────────────
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -178,6 +179,7 @@ function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={["Doctor"]} />}>
             <Route path="medicines" element={<DoctorMedicinesPage />} />
             <Route path="verify" element={<VerifyStudent />} />
+            <Route path="/dashboard/firstaid" element={<FirstAidRequests />} />
           </Route>
 
           {/* Nurse */}
