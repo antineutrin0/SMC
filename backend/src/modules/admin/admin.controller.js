@@ -89,8 +89,7 @@ const getApplications = async (req, res) => {
       `SELECT mca.*, 
               p.person_id, p.fullname, p.date_of_birth, p.contact_number, p.email,
               p.upazilla, p.district, p.division, p.country, p.type,
-              mc.Height_cm, mc.Weight_kg, mc.BloodGroup, mc.PasswordHash,
-              ap.fullname AS approver_name
+              mc.Height_cm, mc.Weight_kg, mc.BloodGroup
        FROM MedicalCardApplication mca
        JOIN Person p ON mca.PersonID = p.person_id
        LEFT JOIN MedicalCard mc ON p.person_id = mc.PersonID
