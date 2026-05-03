@@ -527,6 +527,4 @@ module.exports = {
   reviewFirstAidRequest,
   getRequisitions,
   processRequisition,
-  getProcessedFirstAidRequests,
-  dispenseFirstAidRequest,
 };

@@ -34,10 +34,4 @@ router.patch(
 router.get("/requisitions", ctrl.getRequisitions);
 router.post("/requisitions/:id/process", ctrl.processRequisition);
 
-// Processed First Aid Requests
-router.get("/first-aid/processed", ctrl.getProcessedFirstAidRequests);
-
-// Dispense First Aid Request (Pharmacist action after doctor processes it)
-router.post("/first-aid/:id/dispense", ctrl.dispenseFirstAidRequest);
-
 module.exports = router;

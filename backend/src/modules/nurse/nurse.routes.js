@@ -15,5 +15,12 @@ router.post(
 router.get("/:nurseId/history", ctrl.getDispensationHistory);
 router.post("/requisition", ctrl.createRequisition);
 router.get("/requisition/history", ctrl.getRequisitionHistory);
+router.get("/substore-inventory", ctrl.getSubstoreInventory);
+
+// Processed First Aid Requests
+router.get("/first-aid/processed", ctrl.getProcessedFirstAidRequests);
+
+// Dispense First Aid Request (Pharmacist action after doctor processes it)
+router.post("/first-aid/:id/dispense", ctrl.dispenseFirstAidRequest);
 
 module.exports = router;

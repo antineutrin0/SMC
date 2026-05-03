@@ -25,18 +25,20 @@ const NAV_BY_ROLE = {
     { label: "Visit History", path: "/dashboard/visits", icon: Calendar },
     {
       label: "First Aid Requests",
-      path: "/dashboard/firstaid",
+      path: "/dashboard/first-aid",
       icon: Ambulance,
     },
   ],
   Doctor: [
     { label: "Patient Visits", path: "/dashboard", icon: Stethoscope },
     { label: "Medicines", path: "/dashboard/medicines", icon: Pill },
+    { label: "First Aid Requests", path: "/dashboard/firstaid", icon: Ambulance },
   ],
   Nurse: [
     { label: "Pending Tokens", path: "/dashboard", icon: Pill },
     { label: "Dispensing History", path: "/dashboard/history", icon: FileText },
     { label: "Medicine Requests", path: "/dashboard/requests", icon: Package },
+    { label: "Substore Inventory", path: "/dashboard/inventory", icon: Activity },
   ],
   Registrar: [
     { label: "Inventory", path: "/dashboard", icon: Pill },

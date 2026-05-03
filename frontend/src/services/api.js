@@ -66,6 +66,7 @@ export const deleteRoster = (id) => del(`/admin/rosters/${id}`);
 export const getMedicalCardApplications = () => get("/admin/applications");
 export const reviewApplication = (id, data) =>
   patch(`/admin/applications/${id}/review`, data);
+export const approveMedicalCard = (data) => post("/admin/applications/approve", data);
 export const createEmployee = (data) => post("/admin/employees", data);
 
 // ─── Doctor ──────────────────────────────────────────────────
@@ -76,6 +77,9 @@ export const createPrescription = (data) => post("/doctor/prescriptions", data);
 export const getMedicines = () => get("/public/medicines");
 // Tokens
 export const createToken = (data) => post("/doctor/createtokens", data);
+export const getApprovedFirstAidRequests = () => get("/doctor/first-aid/approved");
+export const processFirstAidRequest = (requestId, items) =>
+  post(`/doctor/first-aid/${requestId}/process`, { items });
 
 // ─── Patient ─────────────────────────────────────────────────
 
@@ -91,6 +95,8 @@ export const getVisitPrescription = (visitId) =>
   apiClient.get(`/visits/${visitId}/prescriptions`);
 export const getFirstAidRequestDetail = (requestId) =>
   apiClient.get(`/first-aid/requests/${requestId}`);
+export const getPrescriptionFromPatient = (visitId) =>
+  get(`/patient/prescription/${visitId}`);
 
 // ─── Nurse ───────────────────────────────────────────────────
 
@@ -103,6 +109,7 @@ export const createNurseMedicineRequest = (data) =>
   post("/nurse/requisition", data);
 export const getRequisitionHistory = (nurseId) =>
   get(`/pharmacist/requisitions`);
+export const getSubstoreInventory = () => get("/nurse/substore-inventory");
 
 // ─── Pharmacist ──────────────────────────────────────────────
 
