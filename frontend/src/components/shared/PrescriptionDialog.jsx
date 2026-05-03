@@ -18,40 +18,10 @@ import {
 } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { StatChip } from ".";
-
-// ── Dummy prescription data (replace with API call later) ─────
-const DUMMY_PRESCRIPTIONS = [
-  {
-    prescription_id: 1,
-    medicine_name: "Amoxicillin",
-    generic_name: "Amoxicillin Trihydrate",
-    quantity: 21,
-    unit: "pcs",
-    dose: "500mg",
-    frequency: "3 times/day",
-    duration: "7 days",
-  },
-  {
-    prescription_id: 2,
-    medicine_name: "Napa Extra",
-    generic_name: "Paracetamol + Caffeine",
-    quantity: 10,
-    unit: "pcs",
-    dose: "1 tablet",
-    frequency: "2 times/day",
-    duration: "5 days",
-  },
-  {
-    prescription_id: 3,
-    medicine_name: "Omeprazole",
-    generic_name: "Omeprazole 20mg",
-    quantity: 14,
-    unit: "pcs",
-    dose: "20mg",
-    frequency: "1 time/day",
-    duration: "2 weeks",
-  },
-];
+import { useFetch } from "../../hooks";
+import { useCallback } from "react";
+import { getPrescription, getPrescriptionFromPatient } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 // ── Small info row used in the header card ─────────────────────
 function InfoRow({ icon: Icon, label, value }) {
@@ -66,24 +36,20 @@ function InfoRow({ icon: Icon, label, value }) {
 }
 
 // ── Component ─────────────────────────────────────────────────
-// Props:
-//   visit   — the visit object. Expected fields (all optional):
-//               visit_date, doctor_name, doctor_specialization,
-//               patient_name, card_id, symptoms, advice
-//   open    — boolean
-//   onClose — () => void
 export function PrescriptionDialog({ visit, open, onClose }) {
-  // TODO: Replace DUMMY_PRESCRIPTIONS with API call:
-  // const { data, loading } = useFetch(
-  //   useCallback(
-  //     () => visit ? getVisitPrescription(visit.visit_id) : Promise.resolve(null),
-  //     [visit?.visit_id],
-  //   ),
-  //   [visit?.visit_id],
-  // );
-  // const prescriptions = data?.data || [];
+  const {user}= useAuth();
+  const { data: presData, loading } = useFetch(
+    useCallback(() => {
+      if (!visit?.visit_id) return Promise.resolve(null);
+      if(user.role === "Patient")
+        return getPrescriptionFromPatient(visit.visit_id);
+      else
+      return getPrescription(visit.visit_id);
+    }, [visit?.visit_id]),
+  );
 
-  const prescriptions = DUMMY_PRESCRIPTIONS;
+  const prescription = presData?.data || null;
+  const medications = prescription?.medications || [];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -189,9 +155,9 @@ export function PrescriptionDialog({ visit, open, onClose }) {
           </h3>
 
           <div className="grid gap-3">
-            {prescriptions.map((med, idx) => (
+            {medications.map((med, idx) => (
               <div
-                key={med.prescription_id ?? idx}
+                key={med.medicine_id ?? idx}
                 className="rounded-lg border bg-card p-4 transition-colors hover:bg-muted/30"
               >
                 {/* Medicine name */}
@@ -208,43 +174,45 @@ export function PrescriptionDialog({ visit, open, onClose }) {
 
                 {/* Stat chips */}
                 <div className="grid grid-cols-3 gap-2">
-                  {/* <StatChip
-                    icon={<Hash className="size-3" />}
-                    label="Quantity"
-                    value={
-                      med.quantity != null
-                        ? `${med.quantity} ${med.unit ?? "pcs"}`
-                        : "—"
-                    }
-                  /> */}
                   <StatChip
                     icon={<Pill className="size-3" />}
                     label="Dose"
-                    value={med.dose ?? "—"}
+                    value={
+                      med.dosage_amount
+                        ? `${med.dosage_amount} ${med.dosage_unit}`
+                        : "—"
+                    }
                   />
                   <StatChip
                     icon={<Clock className="size-3" />}
                     label="Frequency"
-                    value={med.frequency ?? "—"}
+                    value={med.frequency ? `${med.frequency}x / day` : "—"}
                   />
                   <StatChip
                     icon={<Utensils className="size-3" />}
                     label="Timing"
-                    value={med.timing ?? "After meals"}
+                    value="After meals"
                   />
                 </div>
 
                 {/* Duration */}
-                {med.duration && (
+                {med.duration_day && (
                   <div className="mt-3 pt-3 border-t text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">
                       Duration:
                     </span>{" "}
-                    {med.duration}
+                    {med.duration_day}{" "}
+                    {med.duration_day === 1 ? "day" : "days"}
                   </div>
                 )}
               </div>
             ))}
+
+            {!loading && medications.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4 border-2 border-dashed rounded-lg">
+                No medicines prescribed
+              </p>
+            )}
           </div>
         </div>
 

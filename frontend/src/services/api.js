@@ -95,6 +95,8 @@ export const getVisitPrescription = (visitId) =>
   apiClient.get(`/visits/${visitId}/prescriptions`);
 export const getFirstAidRequestDetail = (requestId) =>
   apiClient.get(`/first-aid/requests/${requestId}`);
+export const getPrescriptionFromPatient = (visitId) =>
+  get(`/patient/prescription/${visitId}`);
 
 // ─── Nurse ───────────────────────────────────────────────────
 
