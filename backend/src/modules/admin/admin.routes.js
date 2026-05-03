@@ -35,7 +35,6 @@ router.get("/applications", ctrl.getApplications);
 
 router.post(
   "/applications/approve",
-  validate(["applicationId", "personId", "cardId", "password"]),
   ctrl.approveMedicalCard,
 );
 

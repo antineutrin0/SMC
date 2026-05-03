@@ -126,10 +126,9 @@ const getApplicationById = async (req, res) => {
 // POST /admin/applications/approve — approve a medical card application (also creates the actual medical card if approved)
 const approveMedicalCard = async (req, res) => {
   try {
-    const { applicationId } = req.params;
-    const { status, comments } = req.body;
+    const {applicationId, status, comments } = req.body;
     const reviewerId = req.user.id;
-
+    console.log("Approving application", applicationId, "with status", status, "by reviewer", reviewerId);
     const validStatuses = ["Pending", "Approved", "Rejected"];
     if (!validStatuses.includes(status))
       return badRequest(res, "Invalid status");
