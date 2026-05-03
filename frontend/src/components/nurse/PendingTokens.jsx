@@ -52,7 +52,9 @@ export function PendingTokens() {
 
   const filteredTokens = useMemo(() => {
     return tokens.filter((t) =>
-      t.token_uuid.toLowerCase().includes(searchQuery.trim().toLowerCase()),
+      t.token_uuid == null
+        ? false
+        : t.token_uuid.toLowerCase().includes(searchQuery.trim().toLowerCase()),
     );
   }, [tokens, searchQuery]);
 

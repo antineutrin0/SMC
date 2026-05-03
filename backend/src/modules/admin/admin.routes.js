@@ -27,11 +27,11 @@ router.post(
 
 // Medical Card Applications
 router.get("/applications", ctrl.getApplications);
-router.patch(
-  "/applications/:applicationId/review",
-  validate(["status"]),
-  ctrl.reviewApplication,
-);
+// router.patch(
+//   "/applications/:applicationId/review",
+//   validate(["status"]),
+//   ctrl.reviewApplication,
+// );
 
 router.post(
   "/applications/approve",
