@@ -52,7 +52,7 @@ export function PendingTokens() {
 
   const filteredTokens = useMemo(() => {
     return tokens.filter((t) =>
-      t.token_id.toString().includes(searchQuery.trim()),
+      t.token_uuid.toLowerCase().includes(searchQuery.trim().toLowerCase()),
     );
   }, [tokens, searchQuery]);
 
@@ -63,8 +63,8 @@ export function PendingTokens() {
       const presc = await getPrescription(token.visit_id);
       setPrescription(presc.data);
       const init = {};
-      presc.data.medications?.forEach((m) => {
-        init[m.medicine_id] = m.duration_day * m.frequency;
+      token.items?.forEach((item) => {
+        init[item.medicine_id] = item.quantity;
       });
       setQuantities(init);
       open();
@@ -88,14 +88,14 @@ export function PendingTokens() {
   );
 
   const handleDispense = () => {
-    if (!selectedToken || !prescription) return;
+    if (!selectedToken || !selectedToken.items) return;
     dispense({
       tokenId: selectedToken.token_id,
-      medicines: prescription.medications.map((m) => ({
-        medicineId: m.medicine_id,
-        quantity: quantities[m.medicine_id] || 0,
+      medicines: selectedToken.items.map((item) => ({
+        medicineId: item.medicine_id,
+        quantity: item.quantity,
       })),
-      employeeId: user.id,
+      employeeId: user?.id,
     });
   };
 
