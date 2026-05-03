@@ -40,6 +40,9 @@ const VerifyStudent = lazy(() => import("./components/doctor/StudentVerfication"
 const NurseTokensPage = lazy(() => import("./pages/nurse/NurseTokensPage"));
 const NurseHistoryPage = lazy(() => import("./pages/nurse/NurseHistoryPage"));
 const NurseRequestPage = lazy(() => import("./pages/nurse/NurseRequestPage"));
+const NurseSubstoreInventoryPage = lazy(
+  () => import("./pages/nurse/NurseSubstoreInventoryPage"),
+);
 
 // Pharmacist
 const PharmacistInventoryPage = lazy(
@@ -186,7 +189,7 @@ function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={["Nurse"]} />}>
             <Route path="history" element={<NurseHistoryPage />} />
             <Route path="requests" element={<NurseRequestPage />} />
-            <Route path="inventory" element={<SubstoreInventory/>}/>
+            <Route path="inventory" element={<NurseSubstoreInventoryPage/>}/>
           </Route>
 
           {/* Pharmacist */}
