@@ -86,11 +86,15 @@ const getEmployeeById = async (req, res) => {
 const getApplications = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT mca.*, p.fullname, p.contact_number, p.type,
-              rv.fullname AS reviewer_name, ap.fullname AS approver_name
+      `SELECT mca.*, 
+              p.person_id, p.fullname, p.date_of_birth, p.contact_number, p.email,
+              p.upazilla, p.district, p.division, p.country, p.type,
+              mc.Height_cm, mc.Weight_kg, mc.BloodGroup, mc.PasswordHash,
+              ap.fullname AS approver_name
        FROM MedicalCardApplication mca
-       JOIN Person p   ON mca.PersonID   = p.person_id
-       LEFT JOIN employee ap ON mca.ApprovedBy = ap.employee_id
+       JOIN Person p ON mca.PersonID = p.person_id
+       LEFT JOIN MedicalCard mc ON p.person_id = mc.PersonID
+       where mca.ApplicationStatus = 'Pending'
        ORDER BY mca.ApplicationDate DESC`,
     );
     return ok(res, { data: rows });
@@ -109,7 +113,7 @@ const getApplicationById = async (req, res) => {
        FROM MedicalCardApplication mca
        JOIN Person p ON mca.PersonID = p.person_id
        WHERE mca.ApplicationID = ?`,
-      [applicationId]
+      [applicationId],
     );
 
     if (!rows.length) return notFound(res, "Application not found");
@@ -155,7 +159,7 @@ const getCards = async (req, res) => {
       `SELECT mc.*, p.fullname, p.contact_number
        FROM MedicalCard mc
        JOIN Person p ON mc.PersonID = p.person_id
-       ORDER BY mc.IssueDate DESC`
+       ORDER BY mc.IssueDate DESC`,
     );
 
     return ok(res, { data: rows });
@@ -170,10 +174,10 @@ const updateCardStatus = async (req, res) => {
     const { cardId } = req.params;
     const { status } = req.body;
 
-    await db.query(
-      "UPDATE MedicalCard SET Status = ? WHERE CardID = ?",
-      [status, cardId]
-    );
+    await db.query("UPDATE MedicalCard SET Status = ? WHERE CardID = ?", [
+      status,
+      cardId,
+    ]);
 
     return ok(res, {}, "Card status updated");
   } catch (err) {
@@ -187,10 +191,10 @@ const extendCardExpiry = async (req, res) => {
     const { cardId } = req.params;
     const { newExpiryDate } = req.body;
 
-    await db.query(
-      "UPDATE MedicalCard SET ExpiryDate = ? WHERE CardID = ?",
-      [newExpiryDate, cardId]
-    );
+    await db.query("UPDATE MedicalCard SET ExpiryDate = ? WHERE CardID = ?", [
+      newExpiryDate,
+      cardId,
+    ]);
 
     return ok(res, {}, "Card expiry updated");
   } catch (err) {
@@ -344,7 +348,6 @@ const getPatients = async (req, res) => {
   }
 };
 
-
 // GET /admin/first-aid-requests — view all first-aid requests with details (for admin use)
 const getFirstAidRequests = async (req, res) => {
   try {
@@ -353,7 +356,7 @@ const getFirstAidRequests = async (req, res) => {
        FROM first_aid_request far
        JOIN MedicalCard mc ON far.requested_by = mc.CardID
        JOIN Person p ON mc.PersonID = p.person_id
-       ORDER BY far.request_date DESC`
+       ORDER BY far.request_date DESC`,
     );
 
     return ok(res, { data: rows });
@@ -373,18 +376,17 @@ const getFirstAidRequestById = async (req, res) => {
        JOIN MedicalCard mc ON far.requested_by = mc.CardID
        JOIN Person p ON mc.PersonID = p.person_id
        WHERE far.request_id = ?`,
-      [requestId]
+      [requestId],
     );
 
-    if (!request.length)
-      return notFound(res, "Request not found");
+    if (!request.length) return notFound(res, "Request not found");
 
     const [items] = await db.query(
       `SELECT fai.*, m.name
        FROM first_aid_item fai
        JOIN medicine m ON fai.medicine_id = m.medicine_id
        WHERE fai.request_id = ?`,
-      [requestId]
+      [requestId],
     );
 
     return ok(res, {
@@ -394,7 +396,6 @@ const getFirstAidRequestById = async (req, res) => {
     serverError(res, err, "admin.getFirstAidRequestById");
   }
 };
-
 
 // ── First-aid requests (admin view) /first-aid/:requestId ─────────────────────────
 const approveFirstAidRequest = async (req, res) => {
@@ -438,70 +439,54 @@ const approveFirstAidRequest = async (req, res) => {
   }
 };
 
-
-
 // helper → generate employee ID
 
 const generateEmployeeId = async (designation) => {
-
   let prefix = "EMP";
 
   switch (designation) {
-
     case "Doctor":
-
       prefix = "DOC";
 
       break;
 
     case "Nurse":
-
       prefix = "NUR";
 
       break;
 
     case "Driver":
-
       prefix = "DRV";
 
       break;
 
     case "Admin":
-
       prefix = "ADM";
 
       break;
 
     case "Registrar":
-
       prefix = "REG";
 
       break;
-
   }
 
   const [[{ count }]] = await db.query(
-
     "SELECT COUNT(*) AS count FROM employee WHERE designation = ?",
 
-    [designation]
-
+    [designation],
   );
 
   const number = String(count + 1).padStart(3, "0"); // DOC001
 
   return `${prefix}${number}`;
-
 };
 
 // ── Create Employee ─────────────────────────────────────────
 
 const createEmployee = async (req, res) => {
-
   try {
-
     const {
-
       fullname,
 
       designation,
@@ -515,19 +500,15 @@ const createEmployee = async (req, res) => {
       password,
 
       photo_url,
-
     } = req.body;
 
     // validation
 
     if (!fullname || !designation || !contact_no || !password) {
-
       return badRequest(res, "Missing required fields");
-
     }
 
     const validDesignations = [
-
       "Doctor",
 
       "Nurse",
@@ -537,13 +518,10 @@ const createEmployee = async (req, res) => {
       "Driver",
 
       "Admin",
-
     ];
 
     if (!validDesignations.includes(designation)) {
-
       return badRequest(res, "Invalid designation");
-
     }
 
     // generate employee id
@@ -559,7 +537,6 @@ const createEmployee = async (req, res) => {
     // insert into DB
 
     await db.query(
-
       `INSERT INTO employee 
 
         (employee_id, fullname, designation, specialization, license_no, photo_url, contact_no, is_active, password_hash)
@@ -567,7 +544,6 @@ const createEmployee = async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`,
 
       [
-
         employeeId,
 
         fullname,
@@ -583,38 +559,27 @@ const createEmployee = async (req, res) => {
         contact_no,
 
         passwordHash,
-
-      ]
-
+      ],
     );
 
     return created(
-
       res,
 
       { data: { employee_id: employeeId } },
 
-      "Employee created successfully"
-
+      "Employee created successfully",
     );
-
   } catch (err) {
-
     serverError(res, err, "admin.createEmployee");
-
   }
-
 };
 
 // PUT /admin/employees/:employeeId — update employee details (except password)
 const updateEmployee = async (req, res) => {
-
   try {
-
     const { employeeId } = req.params;
 
     const {
-
       fullname,
 
       designation,
@@ -626,11 +591,9 @@ const updateEmployee = async (req, res) => {
       contact_no,
 
       photo_url,
-
     } = req.body;
 
     const [result] = await db.query(
-
       `UPDATE employee 
 
        SET fullname = ?, designation = ?, specialization = ?, 
@@ -640,7 +603,6 @@ const updateEmployee = async (req, res) => {
        WHERE employee_id = ?`,
 
       [
-
         fullname,
 
         designation,
@@ -654,21 +616,15 @@ const updateEmployee = async (req, res) => {
         photo_url || null,
 
         employeeId,
-
-      ]
-
+      ],
     );
 
     if (!result.affectedRows) return notFound(res, "Employee not found");
 
     return ok(res, {}, "Employee updated");
-
   } catch (err) {
-
     serverError(res, err, "admin.updateEmployee");
-
   }
-
 };
 
 // PATCH /admin/employees/:employeeId/status — activate/deactivate employee
@@ -677,10 +633,10 @@ const updateEmployeeStatus = async (req, res) => {
     const { employeeId } = req.params;
     const { is_active } = req.body;
 
-    await db.query(
-      "UPDATE employee SET is_active = ? WHERE employee_id = ?",
-      [is_active ? 1 : 0, employeeId]
-    );
+    await db.query("UPDATE employee SET is_active = ? WHERE employee_id = ?", [
+      is_active ? 1 : 0,
+      employeeId,
+    ]);
 
     return ok(res, {}, "Employee status updated");
   } catch (err) {
@@ -698,7 +654,7 @@ const resetEmployeePassword = async (req, res) => {
 
     await db.query(
       "UPDATE employee SET password_hash = ? WHERE employee_id = ?",
-      [hash, employeeId]
+      [hash, employeeId],
     );
 
     return ok(res, {}, "Password reset successful");
@@ -716,7 +672,7 @@ const getInventory = async (req, res) => {
               MIN(mi.exp_date) AS nearest_expiry
        FROM medicine_inventory mi
        JOIN medicine m ON mi.medicine_id = m.medicine_id
-       GROUP BY mi.medicine_id`
+       GROUP BY mi.medicine_id`,
     );
 
     return ok(res, { data: rows });
@@ -733,7 +689,7 @@ const getTransactions = async (req, res) => {
        FROM medicine_transaction mt
        JOIN medicine m ON mt.medicine_id = m.medicine_id
        JOIN employee e ON mt.made_by = e.employee_id
-       ORDER BY mt.transaction_date DESC`
+       ORDER BY mt.transaction_date DESC`,
     );
 
     return ok(res, { data: rows });
@@ -751,7 +707,7 @@ const getAmbulanceLogs = async (req, res) => {
        JOIN MedicalCard mc ON al.patient_id = mc.CardID
        JOIN Person p ON mc.PersonID = p.person_id
        JOIN employee e ON al.driver_id = e.employee_id
-       ORDER BY al.departure_time DESC`
+       ORDER BY al.departure_time DESC`,
     );
 
     return ok(res, { data: rows });
@@ -759,8 +715,6 @@ const getAmbulanceLogs = async (req, res) => {
     serverError(res, err, "admin.getAmbulanceLogs");
   }
 };
-
-
 
 module.exports = {
   getDashboardStats,
@@ -783,10 +737,10 @@ module.exports = {
   getInventory,
   getTransactions,
   getAmbulanceLogs,
-   getApplicationById,
-   getCards,
-   updateCardStatus,
-   extendCardExpiry,
-   getFirstAidRequests,
-   getFirstAidRequestById,
+  getApplicationById,
+  getCards,
+  updateCardStatus,
+  extendCardExpiry,
+  getFirstAidRequests,
+  getFirstAidRequestById,
 };

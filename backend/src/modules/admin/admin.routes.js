@@ -14,17 +14,24 @@ router.get("/employees", ctrl.getEmployees);
 router.get("/employees/:employeeId", ctrl.getEmployeeById);
 router.post(
   "/employees",
-  validate(["designation", "fullname",  "contact_no", "email", "password", "photo_url"]),
+  validate([
+    "designation",
+    "fullname",
+    "contact_no",
+    "email",
+    "password",
+    "photo_url",
+  ]),
   ctrl.createEmployee,
 );
 
 // Medical Card Applications
-// router.get("/applications", ctrl.getApplications);
-// router.patch(
-//   "/applications/:applicationId/review",
-//   validate(["status"]),
-//   ctrl.reviewApplication,
-// );
+router.get("/applications", ctrl.getApplications);
+router.patch(
+  "/applications/:applicationId/review",
+  validate(["status"]),
+  ctrl.reviewApplication,
+);
 
 router.post(
   "/applications/approve",
@@ -59,7 +66,10 @@ router.put("/employees/:employeeId", ctrl.updateEmployee);
 
 router.patch("/employees/:employeeId/status", ctrl.updateEmployeeStatus);
 
-router.patch("/employees/:employeeId/reset-password", ctrl.resetEmployeePassword);
+router.patch(
+  "/employees/:employeeId/reset-password",
+  ctrl.resetEmployeePassword,
+);
 
 // applications
 

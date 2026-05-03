@@ -147,31 +147,33 @@ const dispenseMedicine = async (req, res) => {
       // Bug 2 fix — guard against insufficient substore stock
       const [[{ stock }]] = await db.query(
         "SELECT quantity AS stock FROM substore_inventory WHERE medicine_id = ?",
-        [med.medicineId]
+        [med.medicineId],
       );
       if (!stock || stock < med.quantity) {
-        return badRequest(res, `Insufficient stock for medicine ID ${med.medicineId}`);
+        return badRequest(
+          res,
+          `Insufficient stock for medicine ID ${med.medicineId}`,
+        );
       }
 
       // Record dispensation
       await db.query(
         `INSERT INTO medicine_dispensation (token_id, medicine_id, quantity_dispensed, dispensed_by, dispensed_time)
          VALUES (?, ?, ?, ?, NOW())`,
-        [tokenId, med.medicineId, med.quantity, employeeId]
+        [tokenId, med.medicineId, med.quantity, employeeId],
       );
 
       // Deduct from substore inventory
       await db.query(
         "UPDATE substore_inventory SET quantity = quantity - ? WHERE medicine_id = ?",
-        [med.quantity, med.medicineId]
+        [med.quantity, med.medicineId],
       );
     }
 
     // mark token as Consumed
-    await db.query(
-      "UPDATE token SET status = 'Consumed' WHERE token_id = ?",
-      [tokenId]
-    );
+    await db.query("UPDATE token SET status = 'Consumed' WHERE token_id = ?", [
+      tokenId,
+    ]);
 
     return ok(res, {}, "Medicine dispensed successfully");
   } catch (err) {
@@ -181,27 +183,71 @@ const dispenseMedicine = async (req, res) => {
 
 // GET /api/nurse/:nurseId/history
 const getDispensationHistory = async (req, res) => {
+  const {nurseId}=req.params.nurseId||req.user.id; // allow nurses to view their own history without specifying ID
   try {
-    const nurseId = req.params.nurseId || req.user.id;
+    const [rows] = await db.query(`
+      SELECT 
+        t.token_id,
+        t.token_uuid,
+        t.issued_time,
+        t.status,
 
-    const [rows] = await db.query(
-      `SELECT md.token_id, md.quantity_dispensed, md.dispensed_time,
-              m.name AS medicine_name,
-              p.fullname AS patient_name, ov.card_id
-       FROM medicine_dispensation md
-       JOIN medicine m     ON md.medicine_id = m.medicine_id
-       JOIN token t        ON md.token_id    = t.token_id
-       JOIN outdoor_visit ov ON t.visit_id   = ov.visit_id
-       JOIN MedicalCard mc ON ov.card_id     = mc.CardID
-       JOIN Person p       ON mc.PersonID    = p.person_id
-       WHERE md.dispensed_by = ?
-       ORDER BY md.dispensed_time DESC
-       LIMIT 100`,
-      [nurseId],
-    );
-    return ok(res, { data: rows });
+        p.fullname AS patient_name,
+        d.fullname AS doctor_name,
+
+        ov.card_id,
+        ov.visit_id,
+        ov.visit_date,
+
+        ti.medicine_id,
+        m.name AS medicine_name,
+        ti.quantity
+
+      FROM token t
+      JOIN outdoor_visit ov   ON t.visit_id = ov.visit_id
+      JOIN MedicalCard mc     ON ov.card_id = mc.CardID
+      JOIN Person p           ON mc.PersonID = p.person_id
+      JOIN employee d         ON ov.doctor_id = d.employee_id
+
+      LEFT JOIN token_item ti ON t.token_id = ti.token_id
+      LEFT JOIN medicine m    ON ti.medicine_id = m.medicine_id
+
+      WHERE t.status = 'Consumed' 
+      ORDER BY t.issued_time ASC
+    `);
+    const tokensMap = new Map();
+
+    for (const row of rows) {
+      if (!tokensMap.has(row.token_id)) {
+        tokensMap.set(row.token_id, {
+          token_id: row.token_id,
+          token_uuid: row.token_uuid,
+          issued_time: row.issued_time,
+          status: row.status,
+          patient_name: row.patient_name,
+          doctor_name: row.doctor_name,
+          card_id: row.card_id,
+          visit_id: row.visit_id,
+          visit_date: row.visit_date,
+          items: [],
+        });
+      }
+
+      // add item only if exists
+      if (row.medicine_id) {
+        tokensMap.get(row.token_id).items.push({
+          medicine_id: row.medicine_id,
+          medicine_name: row.medicine_name,
+          quantity: row.quantity,
+        });
+      }
+    }
+
+    const result = Array.from(tokensMap.values());
+
+    return ok(res, { data: result });
   } catch (err) {
-    serverError(res, err, "nurse.getDispensationHistory");
+    serverError(res, err, "nurse.getPendingTokens");
   }
 };
 
