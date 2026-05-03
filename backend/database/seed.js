@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS Person (
   person_id      VARCHAR(20)  NOT NULL,
   fullname       VARCHAR(100) NOT NULL,
   date_of_birth  DATE,
+  photo_url      VARCHAR(255),
   contact_number VARCHAR(14),
   email          VARCHAR(100),
   upazilla       VARCHAR(50),
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS employee (
   license_no     VARCHAR(20),
   photo_url      VARCHAR(255),
   contact_no     VARCHAR(14),
+  email         VARCHAR(50),
   is_active      TINYINT(1)   NOT NULL DEFAULT 1,
   password_hash  VARCHAR(60)  NOT NULL,
   PRIMARY KEY (employee_id)
@@ -62,15 +64,13 @@ CREATE TABLE IF NOT EXISTS MedicalCardApplication (
   ApplicationStatus ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Pending',
   PhotoUrl          VARCHAR(255),
   IdCardUrl         VARCHAR(255),
-  ReviewDate        DATE,
-  ReviewerId        VARCHAR(12),
   ReviewerComments  VARCHAR(500),
   ApprovedBy        VARCHAR(12),
   ApprovedDate      DATE,
   PersonID          VARCHAR(20)  NOT NULL,
   PRIMARY KEY (ApplicationID),
   FOREIGN KEY (PersonID)    REFERENCES Person(person_id),
-  FOREIGN KEY (ReviewerId)  REFERENCES employee(employee_id),
+  --FOREIGN KEY (ReviewerId)  REFERENCES employee(employee_id),
   FOREIGN KEY (ApprovedBy)  REFERENCES employee(employee_id)
 );
 

@@ -75,7 +75,7 @@ const applyForMedicalCard = async (req, res) => {
       password,
     } = req.body;
 
-    if (!personId || !fullname || !contactNumber || !type || !password) {
+    if (!personId || !fullname || !contactNumber || !type || !password || !photoUrl) {
       return badRequest(
         res,
         "personId, fullname, contactNumber, type and password are required",
@@ -86,8 +86,8 @@ const applyForMedicalCard = async (req, res) => {
 
     // Upsert person
     await db.query(
-      `INSERT INTO Person (person_id, fullname, date_of_birth, contact_number, email, upazilla, district, division, country, type)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO Person (person_id, fullname, date_of_birth, photo_url, contact_number, email, upazilla, district, division, country, type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          fullname = VALUES(fullname),
          contact_number = VALUES(contact_number),
@@ -96,6 +96,7 @@ const applyForMedicalCard = async (req, res) => {
         personId,
         fullname,
         dateOfBirth || null,
+        photoUrl || null,
         contactNumber,
         email || null,
         upazilla || null,
@@ -105,16 +106,19 @@ const applyForMedicalCard = async (req, res) => {
         type,
       ],
     );
+    const IssueDate = new Date();
+    const ExpiryDate = new Date(IssueDate);
+    ExpiryDate.setFullYear(ExpiryDate.getFullYear() + 4);
     await db.query(
       `INSERT INTO MedicalCard (CardID, IssueDate, ExpiryDate, Status, PersonID, Height_cm, Weight_kg, BloodGroup, PasswordHash)
-       VALUES (?, now(), DATE_ADD(now(), INTERVAL 4 YEAR), 'Inactive', ?,?, ?, ?, ?)`,
-      [personId, personId, height, weight, bloodgroup, passwordhash],
+       VALUES (?, ?, ?, 'Inactive', ?, ?, ?, ?, ?)`,
+      [personId, IssueDate, ExpiryDate, personId, height, weight, bloodgroup, passwordhash],
     );
     const [result] = await db.query(
       `INSERT INTO MedicalCardApplication
          (ApplicationDate, ApplicationStatus, PhotoUrl, IdCardUrl, PersonID)
-       VALUES (NOW(), 'Pending', ?, ?, ?)`,
-      [photoUrl || null, idCardUrl || null, personId],
+       VALUES (?, 'Pending', ?, ?, ?)`,
+      [new Date(), photoUrl || null, idCardUrl || null, personId],
     );
 
     return created(

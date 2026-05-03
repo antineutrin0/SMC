@@ -81,4 +81,5 @@ const getInfo = async (_req, res) => {
   return ok(res, { data: info });
 };
 
-module.exports = { getRoster, getEmployees, getServices, getInfo };
+
+module.exports = { getRoster, getEmployees, getServices, getInfo};
