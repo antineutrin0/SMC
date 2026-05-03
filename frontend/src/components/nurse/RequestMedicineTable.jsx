@@ -18,7 +18,7 @@ export function RequestMedicineTable({ history }) {
       timeStyle: "short",
     });
   };
-
+  console.log("History in Table", history);
   return (
     <TableWrapper>
       <Table>
@@ -28,7 +28,7 @@ export function RequestMedicineTable({ history }) {
             <TableHead>Requested By</TableHead>
             <TableHead>Requested Items</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Decision Date</TableHead>
+            {/* <TableHead>Decision Date</TableHead> */}
             <TableHead className="text-right">Remarks</TableHead>
           </TableRow>
         </TableHeader>
@@ -67,11 +67,11 @@ export function RequestMedicineTable({ history }) {
                     {req.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                {/* <TableCell className="text-sm text-muted-foreground">
                   {req.status?.toUpperCase() !== "PENDING"
                     ? formatDate(req.decision_date)
                     : "Waiting..."}
-                </TableCell>
+                </TableCell> */}
                 <TableCell className="text-right text-xs max-w-[200px] truncate italic">
                   {req.admin_remarks || "No remarks"}
                 </TableCell>
