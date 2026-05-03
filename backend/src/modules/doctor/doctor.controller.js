@@ -1,4 +1,5 @@
 const db = require("../../config/db");
+const crypto = require("crypto");
 const { ok, created, notFound, serverError, badRequest } = require("../../utils/response");
 
 // GET /api/doctor/:doctorId/visits
@@ -85,43 +86,151 @@ const createPrescription = async (req, res) => {
   } catch (err) { serverError(res, err, "doctor.createPrescription"); }
 };
 
+// const createToken = async (req, res) => {
+//   try {
+//     const { visitId, medications } = req.body;
+
+//     // Ensure visit exists and belongs to this doctor
+//     const [visitRows] = await db.query(
+//       "SELECT visit_id FROM outdoor_visit WHERE visit_id = ? AND doctor_id = ?",
+//       [visitId, req.user.id]
+//     );
+//     if (!visitRows.length) return notFound(res, "Visit not found or not yours");
+
+//     // Create token
+//     const [tokenResult] = await db.query(
+//       "INSERT INTO token (visit_id, issued_time) VALUES (?, NOW())",
+//       [visitId]
+//     );
+
+//     await db.query(
+//       `UPDATE prescription SET hastoken = 1 WHERE visit_id = ?`,
+//       [visitId]
+//     );  
+
+//     // create token items
+//     if (Array.isArray(medications) && medications.length > 0) {
+//       for (const med of medications) {
+//         await db.query(
+//           `INSERT INTO token_item (token_id, medicine_id, quantity)
+//            VALUES (?, ?, ?)`,
+//           [tokenResult.insertId, med.medicineId, med.quantity]
+//         );
+//       }
+//     }
+
+//     return created(res, {}, "Token created");
+//   } catch (err) { serverError(res, err, "doctor.createToken"); }
+// };
+const generateTokenUUID = async () => {
+
+  let uuid;
+
+  let exists = true;
+
+  while (exists) {
+
+    // generate 6-char uppercase alphanumeric
+
+    uuid = crypto.randomBytes(3).toString("hex"); // e.g. "A1B2C3"
+
+    const [rows] = await db.query(
+
+      "SELECT token_id FROM token WHERE token_uuid = ?",
+
+      [uuid]
+
+    );
+
+    if (!rows.length) exists = false;
+
+  }
+
+  return uuid;
+
+};
+
 const createToken = async (req, res) => {
+
   try {
+
     const { visitId, medications } = req.body;
 
     // Ensure visit exists and belongs to this doctor
+
     const [visitRows] = await db.query(
+
       "SELECT visit_id FROM outdoor_visit WHERE visit_id = ? AND doctor_id = ?",
+
       [visitId, req.user.id]
+
     );
+
     if (!visitRows.length) return notFound(res, "Visit not found or not yours");
 
+    // 🔑 Generate UUID
+
+    const tokenUUID = await generateTokenUUID();
+
     // Create token
+
     const [tokenResult] = await db.query(
-      "INSERT INTO token (visit_id, issued_time) VALUES (?, NOW())",
-      [visitId]
+
+      `INSERT INTO token (token_uuid, visit_id, issued_time)
+
+       VALUES (?, ?, NOW())`,
+
+      [tokenUUID, visitId]
+
     );
 
+    // mark prescription
+
     await db.query(
+
       `UPDATE prescription SET hastoken = 1 WHERE visit_id = ?`,
+
       [visitId]
-    );  
+
+    );
 
     // create token items
+
     if (Array.isArray(medications) && medications.length > 0) {
+
       for (const med of medications) {
+
         await db.query(
+
           `INSERT INTO token_item (token_id, medicine_id, quantity)
+
            VALUES (?, ?, ?)`,
+
           [tokenResult.insertId, med.medicineId, med.quantity]
+
         );
+
       }
+
     }
 
-    return created(res, {}, "Token created");
-  } catch (err) { serverError(res, err, "doctor.createToken"); }
-};
+    return created(
 
+      res,
+
+      { data: { tokenId: tokenResult.insertId, tokenUUID } },
+
+      "Token created"
+
+    );
+
+  } catch (err) {
+
+    serverError(res, err, "doctor.createToken");
+
+  }
+
+};
 
 // GET /api/doctor/prescriptions/:visitId
 const getPrescription = async (req, res) => {
@@ -162,4 +271,108 @@ const getMedicines = async (req, res) => {
   } catch (err) { serverError(res, err, "doctor.getMedicines"); }
 };
 
-module.exports = { getVisits, createVisit, createPrescription, getPrescription, getMedicines, createToken };
+// POST /doctor/first-aid/:requestId/process
+// req.body: { items: [{ medicine_id, quantity }, ...] }
+// Example body:
+// {
+//   "items": [
+//     {
+//       "medicine_id": 1,
+//       "quantity": 10
+//     },
+//     {
+//       "medicine_id": 2,
+//       "quantity": 5
+//     }
+//   ]
+// }
+const processFirstAidRequest = async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    const { requestId } = req.params;
+    const { items } = req.body;
+    const doctorId = req.user.id;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return badRequest(res, "Items are required");
+    }
+
+    await connection.beginTransaction();
+
+    // 1️⃣ Check request exists and is APPROVED
+    const [[request]] = await connection.query(
+      "SELECT * FROM first_aid_request WHERE request_id = ? FOR UPDATE",
+      [requestId]
+    );
+
+    if (!request) {
+      await connection.rollback();
+      return notFound(res, "Request not found");
+    }
+
+    if (request.statue !== "APPROVED") {
+      await connection.rollback();
+      return badRequest(res, "Only approved requests can be processed");
+    }
+
+    // 2️⃣ Clear previous items if any (safety)
+    await connection.query(
+      "DELETE FROM first_aid_item WHERE request_id = ?",
+      [requestId]
+    );
+
+    // 3️⃣ Insert items
+    for (const item of items) {
+      if (!item.medicine_id || !item.quantity || item.quantity <= 0) {
+        await connection.rollback();
+        return badRequest(res, "Invalid item format");
+      }
+
+      await connection.query(
+        `INSERT INTO first_aid_item (request_id, medicine_id, quantity)
+         VALUES (?, ?, ?)`,
+        [requestId, item.medicine_id, item.quantity]
+      );
+    }
+
+    // 4️⃣ Update request status
+    await connection.query(
+      `UPDATE first_aid_request 
+       SET statue = 'PROCESSED',
+           processed_by = ?,
+           processed_date = NOW()
+       WHERE request_id = ?`,
+      [doctorId, requestId]
+    );
+
+    await connection.commit();
+
+    return ok(res, {}, "First aid request processed");
+  } catch (err) {
+    await connection.rollback();
+    serverError(res, err, "doctor.processFirstAidRequest");
+  } finally {
+    connection.release();
+  }
+};
+
+// GET /doctor/first-aid/approved
+const getApprovedFirstAidRequests = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT far.*, p.fullname
+       FROM first_aid_request far
+       JOIN MedicalCard mc ON far.requested_by = mc.CardID
+       JOIN Person p ON mc.PersonID = p.person_id
+       WHERE far.statue = 'APPROVED'
+       ORDER BY far.request_date DESC`
+    );
+
+    return ok(res, { data: rows });
+  } catch (err) {
+    serverError(res, err, "doctor.getApprovedFirstAidRequests");
+  }
+};
+
+module.exports = { getVisits, createVisit, createPrescription, getPrescription, getMedicines, createToken, processFirstAidRequest, getApprovedFirstAidRequests };

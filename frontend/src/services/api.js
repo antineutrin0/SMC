@@ -67,6 +67,7 @@ export const getMedicalCardApplications = () => get("/admin/applications");
 export const reviewApplication = (id, data) =>
   patch(`/admin/applications/${id}/review`, data);
 export const approveMedicalCard = (data) => post("/admin/applications/approve", data);
+export const createEmployee = (data) => post("/admin/employees", data);
 
 // ─── Doctor ──────────────────────────────────────────────────
 
