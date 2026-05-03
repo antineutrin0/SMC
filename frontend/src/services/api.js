@@ -66,7 +66,8 @@ export const deleteRoster = (id) => del(`/admin/rosters/${id}`);
 export const getMedicalCardApplications = () => get("/admin/applications");
 export const reviewApplication = (id, data) =>
   patch(`/admin/applications/${id}/review`, data);
-export const approveMedicalCard = (data) => post("/admin/applications/approve", data);
+export const approveMedicalCard = (data) =>
+  post("/admin/applications/approve", data);
 export const createEmployee = (data) => post("/admin/employees", data);
 
 // ─── Doctor ──────────────────────────────────────────────────
@@ -77,7 +78,8 @@ export const createPrescription = (data) => post("/doctor/prescriptions", data);
 export const getMedicines = () => get("/public/medicines");
 // Tokens
 export const createToken = (data) => post("/doctor/createtokens", data);
-export const getApprovedFirstAidRequests = () => get("/doctor/first-aid/approved");
+export const getApprovedFirstAidRequests = () =>
+  get("/doctor/first-aid/approved");
 export const processFirstAidRequest = (requestId, items) =>
   post(`/doctor/first-aid/${requestId}/process`, { items });
 
@@ -113,7 +115,7 @@ export const getSubstoreInventory = () => get("/nurse/substore-inventory");
 
 // ─── Pharmacist ──────────────────────────────────────────────
 
-export const getPharmacistMedicines = () => get("/pharmacist/medicines");
+export const getPharmacistMedicines = () => get("/pharmacist/inventory");
 export const addMedicine = (data) => post("/pharmacist/medicines", data);
 export const updateMedicine = (id, data) =>
   put(`/pharmacist/medicines/${id}`, data);
