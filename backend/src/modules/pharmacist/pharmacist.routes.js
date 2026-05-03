@@ -18,7 +18,7 @@ router.post(
   ctrl.addInventory,
 );
 router.get("/inventory/:medicineId", ctrl.getInventory);
-
+router.get("/inventory", ctrl.getAllInventory);
 // Transactions
 router.get("/transactions", ctrl.getTransactions);
 

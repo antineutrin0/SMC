@@ -26,17 +26,22 @@ const getMedicines = async (req, res) => {
   }
 };
 
-const getInventory = async (req, res) => {
+const getAllInventory = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT 
           mi.medicine_id,
-          COALESCE(SUM(mi.quantity), 0) AS total_quantity,
-          MIN(mi.exp_date)              AS nearest_expiry,
-          COUNT(mi.inventory_id)        AS batch_count
+          m.name,
+          m.generic_name,
+          m.catagory,
+          SUM(mi.quantity)        AS total_quantity,
+          MIN(mi.exp_date)        AS nearest_expiry,
+          COUNT(mi.inventory_id)  AS batch_count
        FROM medicine_inventory mi
+       INNER JOIN medicine m 
+         ON mi.medicine_id = m.medicine_id
        GROUP BY mi.medicine_id
-       ORDER BY mi.medicine_id`,
+       ORDER BY m.name`,
     );
 
     return ok(res, { data: rows });
@@ -527,4 +532,5 @@ module.exports = {
   reviewFirstAidRequest,
   getRequisitions,
   processRequisition,
+  getAllInventory,
 };
