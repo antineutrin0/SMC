@@ -77,6 +77,9 @@ export const createPrescription = (data) => post("/doctor/prescriptions", data);
 export const getMedicines = () => get("/public/medicines");
 // Tokens
 export const createToken = (data) => post("/doctor/createtokens", data);
+export const getApprovedFirstAidRequests = () => get("/doctor/first-aid/approved");
+export const processFirstAidRequest = (requestId, items) =>
+  post(`/doctor/first-aid/${requestId}/process`, { items });
 
 // ─── Patient ─────────────────────────────────────────────────
 

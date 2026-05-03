@@ -32,6 +32,7 @@ const NAV_BY_ROLE = {
   Doctor: [
     { label: "Patient Visits", path: "/dashboard", icon: Stethoscope },
     { label: "Medicines", path: "/dashboard/medicines", icon: Pill },
+    { label: "First Aid Requests", path: "/dashboard/firstaid", icon: Ambulance },
   ],
   Nurse: [
     { label: "Pending Tokens", path: "/dashboard", icon: Pill },
