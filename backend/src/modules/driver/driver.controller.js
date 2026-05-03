@@ -88,7 +88,7 @@ const createLog = async (req, res) => {
         departureTime || new Date(),
         destination || null,
         initialKms,
-        initialKms // initially same as start
+        finalKms || null// initially same as start
       ],
     );
 
