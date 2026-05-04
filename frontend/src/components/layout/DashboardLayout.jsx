@@ -39,6 +39,7 @@ const NAV_BY_ROLE = {
     { label: "Dispensing History", path: "/dashboard/history", icon: FileText },
     { label: "Medicine Requests", path: "/dashboard/requests", icon: Package },
     { label: "Substore Inventory", path: "/dashboard/inventory", icon: Activity },
+    { label: "First Aid Requests", path: "/dashboard/first-aid", icon: Ambulance },
   ],
   Registrar: [
     { label: "Inventory", path: "/dashboard", icon: Pill },
