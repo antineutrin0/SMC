@@ -116,7 +116,7 @@ const getMe = async (req, res) => {
     if (role === "Patient") {
       const [rows] = await db.query(
         `SELECT mc.CardID, mc.Status, mc.BloodGroup, mc.IssueDate, mc.ExpiryDate,
-                p.fullname, p.contact_number, p.email, p.type
+                p.fullname, p.contact_number, p.email, p.type, p.photo_url
          FROM MedicalCard mc
          JOIN Person p ON mc.PersonID = p.person_id
          WHERE mc.CardID = ?`,
