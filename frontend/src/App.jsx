@@ -209,7 +209,7 @@ function AppRoutes() {
           {/* Pharmacist */}
           <Route element={<ProtectedRoute allowedRoles={["Registrar"]} />}>
             <Route
-              path="transactions"
+              path="transactions-pharmacist"
               element={<PharmacistTransactionsPage />}
             />
             <Route
@@ -221,7 +221,7 @@ function AppRoutes() {
           {/* Patient */}
           <Route element={<ProtectedRoute allowedRoles={["Patient"]} />}>
             <Route path="visits" element={<PatientVisitsPage />} />
-            <Route path="first-aid" element={<PatientFirstAidPage />} />
+            <Route path="first-aid-request" element={<PatientFirstAidPage />} />
           </Route>
 
           {/* Driver */}

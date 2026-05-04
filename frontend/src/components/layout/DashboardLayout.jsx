@@ -26,7 +26,7 @@ const NAV_BY_ROLE = {
     { label: "Visit History", path: "/dashboard/visits", icon: Calendar },
     {
       label: "First Aid Requests",
-      path: "/dashboard/first-aid",
+      path: "/dashboard/first-aid-request",
       icon: Ambulance,
     },
   ],
@@ -56,12 +56,7 @@ const NAV_BY_ROLE = {
   ],
   Registrar: [
     { label: "Inventory", path: "/dashboard", icon: Pill },
-    { label: "Transactions", path: "/dashboard/transactions", icon: Activity },
-    {
-      label: "First Aid Requests",
-      path: "/dashboard/firstaidrequest",
-      icon: Package,
-    },
+    { label: "Transactions", path: "/dashboard/transactions-pharmacist", icon: Activity },
   ],
   Driver: [{ label: "Service Logs", path: "/dashboard", icon: Ambulance }],
   Admin: [

@@ -1,11 +1,7 @@
-// ============================================================
-// API Service Layer - Full Backend Integration
-// Base URL configurable via environment variable
-// ============================================================
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
-// ─── HTTP Helpers ────────────────────────────────────────────
+// HTTP Helpers
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("auth_token");
@@ -37,7 +33,7 @@ const put = (url, body) => request("PUT", url, body);
 const patch = (url, body) => request("PATCH", url, body);
 const del = (url) => request("DELETE", url);
 
-// ─── Auth ─────────────────────────────────────────────────────
+// ─── Auth
 
 export const login = (userType, identifier, password) =>
   post("/auth/login", { userType, identifier, password });
@@ -45,14 +41,14 @@ export const login = (userType, identifier, password) =>
 export const logout = () => post("/auth/logout");
 export const getMe = () => get("/auth/me");
 
-// ─── Public (no auth required) ───────────────────────────────
+// ─── Public (no auth required)
 
 export const getPublicRoster = () => get("/public/roster");
 export const getPublicEmployees = () => get("/public/employees");
 export const getServices = () => get("/public/services");
 export const getMedicalCenterInfo = () => get("/public/info");
 
-// ─── Admin ───────────────────────────────────────────────────
+// ─── Admin 
 
 export const getDashboardStats = () => get("/admin/stats");
 export const getEmployees = () => get("/admin/employees");
@@ -82,7 +78,7 @@ export const updateEmployeeStatus = (employeeId, is_active) =>
 export const resetEmployeePassword = (employeeId, password) =>
   patch(`/admin/employees/${employeeId}/reset-password`, { password });
 
-// ─── Doctor ──────────────────────────────────────────────────
+// ─── Doctor
 
 export const getDoctorVisits = (doctorId) => get(`/doctor/${doctorId}/visits`);
 export const createVisit = (data) => post("/doctor/visits", data);
@@ -98,7 +94,7 @@ export const getDoctorPrescription = (visitId) => get(`/doctor/prescriptions/${v
 export const getPatientProfileForDoctor = (cardId) => get(`/patient/${cardId}/profile`);
 export const getPatientVisitsForDoctor = (cardId) => get(`/patient/${cardId}/visits`);
 
-// ─── Patient ─────────────────────────────────────────────────
+// ─── Patient
 
 export const getPatientProfile = (patientId) =>
   get(`/patient/${patientId}/profile`);
@@ -115,7 +111,7 @@ export const getFirstAidRequestDetail = (requestId) =>
 export const getPrescriptionFromPatient = (visitId) =>
   get(`/patient/prescription/${visitId}`);
 
-// ─── Nurse ───────────────────────────────────────────────────
+// ─── Nurse
 
 export const getPendingTokens = () => get("/nurse/tokens/pending");
 export const getPrescription = (visitId) =>
@@ -133,7 +129,7 @@ export const dispenseFirstAidRequest = (id) =>
 export const getFirstAidRequestDetails = (id) =>
   get(`/nurse/first-aid/${id}`);
 
-// ─── Pharmacist ──────────────────────────────────────────────
+// ─── Pharmacist 
 
 export const getPharmacistMedicines = () => get("/pharmacist/inventory");
 export const addMedicine = (data) => post("/pharmacist/medicines", data);
@@ -145,7 +141,7 @@ export const getFirstAidRequestsPharmacist = () => get("/pharmacist/first-aid");
 export const approveFirstAidRequest = (id, data) =>
   patch(`/pharmacist/first-aid/${id}`, data);
 
-// ─── Driver ──────────────────────────────────────────────────
+// ─── Driver
 
 export const getAmbulanceLogs = (driverId) => get(`/driver/${driverId}/logs`);
 export const createAmbulanceLog = (data) => post("/driver/logs", data);
@@ -154,7 +150,7 @@ export const updateAmbulanceLog = (id, data) =>
 export const completeTrip = (id, returnTime, finalKms) =>
   patch(`/driver/logs/${id}/complete`, { returnTime, finalKms });
 
-// ─── Employee Profile ─────────────────────────────────────────
+// ─── Employee Profile 
 export const getMyProfile = () => get("/profile/me");
 export const updateMyProfile = (data) => put("/profile/me", data);
 export const changeMyPassword = (data) => patch("/profile/me/password", data);

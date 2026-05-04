@@ -24,7 +24,7 @@ const execute = useCallback(async () => {
   } finally {
     if (mountedRef.current) setLoading(false);
   }
-}, [fetchFn]);  // ✅ FIXED // eslint-disable-line react-hooks/exhaustive-deps
+}, [fetchFn]);  
 
   useEffect(() => {
     mountedRef.current = true;
@@ -37,7 +37,6 @@ const execute = useCallback(async () => {
   return { data, loading, error, refetch: execute };
 }
 
-// ─── Generic async mutation hook ─────────────────────────────
 export function useMutation(mutationFn, options = {}) {
   const { onSuccess, onError, successMessage } = options;
   const [loading, setLoading] = useState(false);
@@ -105,7 +104,6 @@ export function useForm(initialValues) {
   };
 }
 
-// ─── Disclosure (open/close) hook ────────────────────────────
 export function useDisclosure(initial = false) {
   const [isOpen, setIsOpen] = useState(initial);
   const open = useCallback(() => setIsOpen(true), []);
