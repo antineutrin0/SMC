@@ -10,8 +10,6 @@ import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { PageLoader } from "./components/shared";
-import StudentVerificationPage from "./components/doctor/StudentVerfication";
-import SubstoreInventory from "./components/nurse/SubstoreInventory";
 import { FirstAidRequests } from "./components/doctor/FirstAidRequests";
 
 // ─── Lazy load pages ──────────────────────────────────────────
@@ -203,7 +201,7 @@ function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={["Nurse"]} />}>
             <Route path="history" element={<NurseHistoryPage />} />
             <Route path="requests" element={<NurseRequestPage />} />
-            <Route path="inventory" element={<NurseSubstoreInventoryPage />} />
+            <Route path="substore-inventory" element={<NurseSubstoreInventoryPage />} />
             <Route path="first-aid" element={<NurseFirstAidDispensePage />} />
           </Route>
 
