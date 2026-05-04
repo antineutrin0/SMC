@@ -79,7 +79,7 @@ export function RosterManagement() {
 
   const { mutate: approve } = useMutation(
     useCallback((id) => approveRoster(id, user.id), [user?.id]),
-    { successMessage: "Roster approved", onSuccess: refetch },
+    { successMessage: "Roster published", onSuccess: refetch },
   );
 
   const handleSubmit = (e) => {
@@ -141,13 +141,13 @@ export function RosterManagement() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(r.status)}>
-                        {r.status}
+                        {r.status=="Draft" ? "Draft" : "Published"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {r.status === "Draft" && (
                         <Button size="sm" onClick={() => approve(r.roster_id)}>
-                          Approve
+                          Publish
                         </Button>
                       )}
                     </TableCell>
