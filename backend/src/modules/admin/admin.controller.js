@@ -464,7 +464,7 @@ const generateEmployeeId = async (designation) => {
       break;
 
     case "Registrar":
-      prefix = "REG";
+      prefix = "PHA";
 
       break;
   }
@@ -480,8 +480,7 @@ const generateEmployeeId = async (designation) => {
   return `${prefix}${number}`;
 };
 
-// ── Create Employee ─────────────────────────────────────────
-
+// POST /admin/employees — create a new employee (Admin only)
 const createEmployee = async (req, res) => {
   try {
     const {
@@ -719,7 +718,6 @@ module.exports = {
   getEmployees,
   getEmployeeById,
   getApplications,
-  //reviewApplication,
   approveMedicalCard,
   getRosters,
   createRoster,

@@ -56,9 +56,9 @@ export function VisitsTable({ visits, loading, handleRowClick, handleAddRx }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {visits.map((v) => (
+                {visits.map((v, idx) => (
                   <TableRow
-                    key={v.visit_id}
+                    key={`${v.visit_id}-${idx}`}
                     className={
                       v.symptoms
                         ? "cursor-pointer hover:bg-muted/60 transition-colors"

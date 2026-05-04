@@ -86,42 +86,6 @@ const createPrescription = async (req, res) => {
   } catch (err) { serverError(res, err, "doctor.createPrescription"); }
 };
 
-// const createToken = async (req, res) => {
-//   try {
-//     const { visitId, medications } = req.body;
-
-//     // Ensure visit exists and belongs to this doctor
-//     const [visitRows] = await db.query(
-//       "SELECT visit_id FROM outdoor_visit WHERE visit_id = ? AND doctor_id = ?",
-//       [visitId, req.user.id]
-//     );
-//     if (!visitRows.length) return notFound(res, "Visit not found or not yours");
-
-//     // Create token
-//     const [tokenResult] = await db.query(
-//       "INSERT INTO token (visit_id, issued_time) VALUES (?, NOW())",
-//       [visitId]
-//     );
-
-//     await db.query(
-//       `UPDATE prescription SET hastoken = 1 WHERE visit_id = ?`,
-//       [visitId]
-//     );  
-
-//     // create token items
-//     if (Array.isArray(medications) && medications.length > 0) {
-//       for (const med of medications) {
-//         await db.query(
-//           `INSERT INTO token_item (token_id, medicine_id, quantity)
-//            VALUES (?, ?, ?)`,
-//           [tokenResult.insertId, med.medicineId, med.quantity]
-//         );
-//       }
-//     }
-
-//     return created(res, {}, "Token created");
-//   } catch (err) { serverError(res, err, "doctor.createToken"); }
-// };
 const generateTokenUUID = async () => {
 
   let uuid;
@@ -129,10 +93,7 @@ const generateTokenUUID = async () => {
   let exists = true;
 
   while (exists) {
-
-    // generate 6-char uppercase alphanumeric
-
-    uuid = crypto.randomBytes(3).toString("hex"); // e.g. "A1B2C3"
+    uuid = crypto.randomBytes(3).toString("hex");
 
     const [rows] = await db.query(
 
@@ -155,9 +116,6 @@ const createToken = async (req, res) => {
   try {
 
     const { visitId, medications } = req.body;
-
-    // Ensure visit exists and belongs to this doctor
-
     const [visitRows] = await db.query(
 
       "SELECT visit_id FROM outdoor_visit WHERE visit_id = ? AND doctor_id = ?",
@@ -167,12 +125,7 @@ const createToken = async (req, res) => {
     );
 
     if (!visitRows.length) return notFound(res, "Visit not found or not yours");
-
-    // 🔑 Generate UUID
-
     const tokenUUID = await generateTokenUUID();
-
-    // Create token
 
     const [tokenResult] = await db.query(
 
@@ -271,21 +224,6 @@ const getMedicines = async (req, res) => {
   } catch (err) { serverError(res, err, "doctor.getMedicines"); }
 };
 
-// POST /doctor/first-aid/:requestId/process
-// req.body: { items: [{ medicine_id, quantity }, ...] }
-// Example body:
-// {
-//   "items": [
-//     {
-//       "medicine_id": 1,
-//       "quantity": 10
-//     },
-//     {
-//       "medicine_id": 2,
-//       "quantity": 5
-//     }
-//   ]
-// }
 const processFirstAidRequest = async (req, res) => {
   const connection = await db.getConnection();
 
@@ -300,7 +238,7 @@ const processFirstAidRequest = async (req, res) => {
 
     await connection.beginTransaction();
 
-    // 1️⃣ Check request exists and is APPROVED
+    // check request exists and is APPROVED
     const [[request]] = await connection.query(
       "SELECT * FROM first_aid_request WHERE request_id = ? FOR UPDATE",
       [requestId]
@@ -316,13 +254,13 @@ const processFirstAidRequest = async (req, res) => {
       return badRequest(res, "Only approved requests can be processed");
     }
 
-    // 2️⃣ Clear previous items if any (safety)
+    // Clear previous items if any (safety)
     await connection.query(
       "DELETE FROM first_aid_item WHERE request_id = ?",
       [requestId]
     );
 
-    // 3️⃣ Insert items
+    // Insert items
     for (const item of items) {
       if (!item.medicine_id || !item.quantity || item.quantity <= 0) {
         await connection.rollback();
@@ -336,7 +274,7 @@ const processFirstAidRequest = async (req, res) => {
       );
     }
 
-    // 4️⃣ Update request status
+    // Update request status
     await connection.query(
       `UPDATE first_aid_request 
        SET statue = 'PROCESSED',
