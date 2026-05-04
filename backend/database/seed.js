@@ -21,9 +21,9 @@ const DB_CONFIG = {
   multipleStatements: true,
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 // DDL — CREATE TABLES IF NOT EXISTS
-// ─────────────────────────────────────────────────────────────────────────────
+
 const DDL = `
 
 -- ── Person (students / teachers / officers before they get a medical card) ──
