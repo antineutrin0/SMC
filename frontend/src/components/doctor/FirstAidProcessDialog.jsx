@@ -16,8 +16,14 @@ import { getMedicines, processFirstAidRequest } from "../../services/api";
 
 const EMPTY_ITEM = { medicine_id: "", quantity: "", _name: "" };
 
-// ── Inline medicine search row ────────────────────────────────
-function MedicineSearchRow({ item, index, medicines, onChange, onRemove, canRemove }) {
+function MedicineSearchRow({
+  item,
+  index,
+  medicines,
+  onChange,
+  onRemove,
+  canRemove,
+}) {
   const [query, setQuery] = useState(item._name || "");
   const [showList, setShowList] = useState(false);
   const wrapperRef = useRef(null);
@@ -33,7 +39,7 @@ function MedicineSearchRow({ item, index, medicines, onChange, onRemove, canRemo
 
   const filtered = query
     ? medicines.filter((m) =>
-        m.name.toLowerCase().includes(query.toLowerCase())
+        m.name.toLowerCase().includes(query.toLowerCase()),
       )
     : [];
 
@@ -109,7 +115,6 @@ function MedicineSearchRow({ item, index, medicines, onChange, onRemove, canRemo
   );
 }
 
-// ── Main dialog ───────────────────────────────────────────────
 export function FirstAidProcessDialog({ request, open, onClose, onProcessed }) {
   const [medicines, setMedicines] = useState([]);
   const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
@@ -136,7 +141,7 @@ export function FirstAidProcessDialog({ request, open, onClose, onProcessed }) {
 
   const updateRow = (idx, patch) =>
     setItems((prev) =>
-      prev.map((item, i) => (i === idx ? { ...item, ...patch } : item))
+      prev.map((item, i) => (i === idx ? { ...item, ...patch } : item)),
     );
 
   const handleSubmit = async () => {
@@ -187,7 +192,10 @@ export function FirstAidProcessDialog({ request, open, onClose, onProcessed }) {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Status</span>
-            <Badge variant="outline" className="border-emerald-500 text-emerald-700">
+            <Badge
+              variant="outline"
+              className="border-emerald-500 text-emerald-700"
+            >
               {request.statue}
             </Badge>
           </div>

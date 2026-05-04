@@ -1,5 +1,11 @@
 import { useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge, Plus } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -14,7 +20,7 @@ import {
   EmptyState,
   TableWrapper,
   getStatusVariant,
-  FirstAidRequestDialog,           
+  FirstAidRequestDialog,
 } from "../shared";
 import {
   Table,
@@ -30,24 +36,24 @@ import RequestsTable from "./RequestTable";
 export function FirstAidRequests() {
   const { user } = useAuth();
 
-  // ── Dialog states ────────────────────────────────────────────
-  const { isOpen, open, close } = useDisclosure();       // create dialog
-  const viewDisclosure = useDisclosure();                // view detail dialog
+  const { isOpen, open, close } = useDisclosure();
+  const viewDisclosure = useDisclosure();
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  // ── Form state ───────────────────────────────────────────────
   const [tripDetails, setTripDetails] = useState("");
   const [selected, setSelected] = useState([]);
 
-  // ── Data fetching ────────────────────────────────────────────
-  const { data: req, loading, refetch } = useFetch(
+  const {
+    data: req,
+    loading,
+    refetch,
+  } = useFetch(
     useCallback(() => getFirstAidRequests(user?.CardID), [user?.CardID]),
-    [user?.CardID]
+    [user?.CardID],
   );
 
   const { data } = useFetch(getMedicines);
   const requests = req?.data || [];
-  // ── Mutation ─────────────────────────────────────────────────
   const { mutate: submit, loading: submitting } = useMutation(
     createFirstAidRequest,
     {
@@ -61,7 +67,6 @@ export function FirstAidRequests() {
     },
   );
 
-  // ── Handlers ─────────────────────────────────────────────────
   const handleRowClick = (request) => {
     setSelectedRequest(request);
     viewDisclosure.open();
@@ -95,7 +100,6 @@ export function FirstAidRequests() {
 
   return (
     <>
-      {/* ── Requests Table ──────────────────────────────────── */}
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -145,17 +149,17 @@ export function FirstAidRequests() {
                       <TableCell className="hidden sm:table-cell text-sm max-w-[200px] truncate">
                         {r.trip_details}
                       </TableCell>
-                     <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          r.statue === "APPROVED"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {r.statue}
-                      </span>
-                    </TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            r.statue === "APPROVED"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {r.statue}
+                        </span>
+                      </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {r.items?.map((item, i) => (
                           <p key={i} className="text-xs text-muted-foreground">
@@ -180,11 +184,9 @@ export function FirstAidRequests() {
               </Table>
             </TableWrapper>
           )}
-          {/* <RequestsTable loading={loading} requests={req?.data || []} /> */}
         </CardContent>
       </Card>
 
-      {/* ── Create Request Dialog ────────────────────────────── */}
       <RequestDialog
         isOpen={isOpen}
         close={close}
@@ -194,9 +196,10 @@ export function FirstAidRequests() {
         user={user}
       />
 
-      {/* ── View Request Detail Dialog (read-only) ───────────── */}
       <FirstAidRequestDialog
-        request={requests.find((r) => r.request_id === selectedRequest?.request_id)}
+        request={requests.find(
+          (r) => r.request_id === selectedRequest?.request_id,
+        )}
         open={viewDisclosure.isOpen}
         onClose={() => {
           viewDisclosure.close();

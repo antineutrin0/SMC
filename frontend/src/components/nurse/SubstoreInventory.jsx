@@ -12,7 +12,14 @@ import {
 } from "../ui/card";
 
 import { Input } from "../ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 import { Badge } from "../ui/badge";
 
 import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
@@ -22,24 +29,21 @@ import { Search, Pill } from "lucide-react";
 export default function SubstoreInventory() {
   const { user } = useAuth();
 
-  // ── State ─────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ── Fetch Data ────────────────────────
   const { data, loading } = useFetch(getSubstoreInventory);
   const inventory = data?.data || [];
 
-  // ── Search Filter ─────────────────────
   const filteredInventory = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
 
-    return inventory.filter((med) =>
-      med.name?.toLowerCase().includes(query) ||
-      med.generic_name?.toLowerCase().includes(query)
+    return inventory.filter(
+      (med) =>
+        med.name?.toLowerCase().includes(query) ||
+        med.generic_name?.toLowerCase().includes(query),
     );
   }, [inventory, searchQuery]);
 
-  // ── UI ───────────────────────────────
   return (
     <Card>
       <CardHeader>
@@ -80,7 +84,6 @@ export default function SubstoreInventory() {
               <TableBody>
                 {filteredInventory.map((med, index) => (
                   <TableRow key={index}>
-                    
                     {/* Medicine Name */}
                     <TableCell className="font-medium flex items-center gap-2">
                       <Pill className="size-4 text-primary" />
@@ -106,8 +109,8 @@ export default function SubstoreInventory() {
                           med.quantity < 50
                             ? "destructive"
                             : med.quantity < 200
-                            ? "secondary"
-                            : "default"
+                              ? "secondary"
+                              : "default"
                         }
                       >
                         {med.quantity}
@@ -118,7 +121,6 @@ export default function SubstoreInventory() {
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(med.last_updated).toLocaleString()}
                     </TableCell>
-
                   </TableRow>
                 ))}
 

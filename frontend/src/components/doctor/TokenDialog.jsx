@@ -19,11 +19,9 @@ export function TokenDialog({ visit, open, onClose, onCreated }) {
       .then((res) => {
         if (!mounted) return;
         console.log("Prescription data:", res);
-        // Expect res.data.medications or res.data
-        const data = res?.data || res;
+         const data = res?.data || res;
         const medications = data?.medications || data?.meds || [];
-        // normalize: { medicine_id, name, available, quantity }
-        const normalized = medications.map((m) => ({
+         const normalized = medications.map((m) => ({
           medicine_id: m.medicine_id ?? m.medicineId ?? m.id,
           name: m.name ?? m.medicine_name ?? "",
           available: m.total_quantity ?? m.available ?? 0,

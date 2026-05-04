@@ -47,7 +47,6 @@ export function PatientVisitHistory() {
               </CardDescription>
             </div>
 
-            {/* ── Filters ──────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row gap-2">
               {/* Doctor name search */}
               <SearchBar
@@ -63,11 +62,9 @@ export function PatientVisitHistory() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  // Cap future dates — visits can't be in the future
                   max={new Date().toISOString().slice(0, 10)}
                   className="w-full h-9 rounded-md border border-input bg-transparent pl-9 pr-9 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
-                {/* Clear button — only shown when a date is selected */}
                 {date && (
                   <button
                     type="button"

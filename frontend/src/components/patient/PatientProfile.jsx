@@ -17,7 +17,6 @@ import { useFetch } from "../../hooks";
 import { getPatientProfile } from "../../services/api";
 import { LoadingSpinner, getStatusVariant } from "../shared";
 
-// ── Dummy avatar placeholder (letter avatar) ──────────────────
 function AvatarPlaceholder({ name }) {
   const initials = name
     ? name
@@ -35,7 +34,6 @@ function AvatarPlaceholder({ name }) {
   );
 }
 
-// ── Single info field ─────────────────────────────────────────
 function InfoField({ icon: Icon, label, value }) {
   if (!value) return null;
   return (
@@ -53,7 +51,6 @@ function InfoField({ icon: Icon, label, value }) {
   );
 }
 
-// ── Component ─────────────────────────────────────────────────
 export function PatientProfile() {
   const { user } = useAuth();
   const { data, loading } = useFetch(
@@ -79,30 +76,27 @@ export function PatientProfile() {
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
+          <div className="sm:w-64 md:w-72 lg:w-80 h-52 shrink-0 relative overflow-hidden bg-muted flex">
+            {profile.photo_url ? (
+              <img
+                src={profile.photo_url}
+                alt={profile.fullname}
+                className="w-full h-full object-cover object-center"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextSibling.style.display = "flex";
+                }}
+              />
+            ) : null}
 
-          {/* ── Left: Photo ──────────────────────────────────── */}
-        <div className="sm:w-64 md:w-72 lg:w-80 h-52 shrink-0 relative overflow-hidden bg-muted flex">
-          {profile.photo_url ? (
-        <img
-          src={profile.photo_url}
-          alt={profile.fullname}
-          className="w-full h-full object-cover object-center"
-          onError={(e) => {
-          e.currentTarget.style.display = "none";
-          e.currentTarget.nextSibling.style.display = "flex";
-          }}
-        />
-        ) : null}
+            <div
+              className="absolute inset-0 flex"
+              style={{ display: profile.photo_url ? "none" : "flex" }}
+            >
+              <AvatarPlaceholder name={profile.fullname} />
+            </div>
+          </div>
 
-        <div
-          className="absolute inset-0 flex"
-          style={{ display: profile.photo_url ? "none" : "flex" }}
-        >
-         <AvatarPlaceholder name={profile.fullname} />
-        </div>
-        </div>
-
-          {/* ── Right: Info ───────────────────────────────────── */}
           <div className="flex-1 p-5 sm:p-6">
             {/* Name + Status */}
             <div className="flex items-start justify-between gap-3 mb-4">
@@ -114,7 +108,10 @@ export function PatientProfile() {
                   {profile.CardID}
                 </p>
               </div>
-              <Badge variant={getStatusVariant(profile.Status)} className="shrink-0 mt-0.5">
+              <Badge
+                variant={getStatusVariant(profile.Status)}
+                className="shrink-0 mt-0.5"
+              >
                 {profile.Status}
               </Badge>
             </div>

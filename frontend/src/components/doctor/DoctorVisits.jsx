@@ -1,6 +1,10 @@
 import { useState, useCallback } from "react";
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -8,17 +12,34 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Badge } from "../ui/badge";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "../ui/dialog";
 import {
-  Plus, User, Clock, ChevronLeft, ChevronRight, Stethoscope,
-  Droplets, Ruler, Weight, Phone, Calendar,
+  Plus,
+  User,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Stethoscope,
+  Droplets,
+  Ruler,
+  Weight,
+  Phone,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFetch, useMutation, useForm, useDisclosure } from "../../hooks";
 import {
-  getDoctorVisits, createVisit, createPrescription, getMedicines,
-  getPatientProfileForDoctor, getPatientVisitsForDoctor,
+  getDoctorVisits,
+  createVisit,
+  createPrescription,
+  getMedicines,
+  getPatientProfileForDoctor,
+  getPatientVisitsForDoctor,
   getDoctorPrescription,
 } from "../../services/api";
 import MedicationRow from "./MedicationRow";
@@ -28,7 +49,11 @@ import { PrescriptionDialog } from "../shared/PrescriptionDialog";
 import { TokenDialog } from "./TokenDialog";
 
 const EMPTY_MED = {
-  medicineId: "", dosageAmount: "", dosageUnit: "mg", durationDay: 1, frequency: 1,
+  medicineId: "",
+  dosageAmount: "",
+  dosageUnit: "mg",
+  durationDay: 1,
+  frequency: 1,
 };
 
 // ── Patient info chip ─────────────────────────────────────────
@@ -57,7 +82,7 @@ function PatientPanel({ cardId }) {
   );
 
   const profile = profileRes?.data ?? null;
-  const visits  = visitsRes?.data  ?? [];
+  const visits = visitsRes?.data ?? [];
 
   const age = profile?.date_of_birth
     ? Math.floor((Date.now() - new Date(profile.date_of_birth)) / 31557600000)
@@ -80,9 +105,11 @@ function PatientPanel({ cardId }) {
               type="button"
               onClick={() => setTab(t)}
               className={`flex-1 py-2 text-sm font-medium transition-colors capitalize
-                ${tab === t
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-muted-foreground hover:text-foreground"}`}
+                ${
+                  tab === t
+                    ? "border-b-2 border-blue-600 text-blue-600"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               {t === "profile" ? "Patient Profile" : "Visit History"}
             </button>
@@ -103,7 +130,9 @@ function PatientPanel({ cardId }) {
                   <div>
                     <p className="font-semibold">{profile.fullname}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <Badge variant="outline" className="text-xs">{profile.type}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {profile.type}
+                      </Badge>
                       <Badge
                         variant="outline"
                         className={`text-xs ${
@@ -119,15 +148,40 @@ function PatientPanel({ cardId }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <InfoChip icon={Droplets} label="Blood"   value={profile.BloodGroup} />
-                  <InfoChip icon={Ruler}    label="Height"  value={profile.Height_cm ? `${profile.Height_cm} cm` : null} />
-                  <InfoChip icon={Weight}   label="Weight"  value={profile.Weight_kg  ? `${profile.Weight_kg} kg`  : null} />
-                  <InfoChip icon={Calendar} label="Age"     value={age ? `${age} yrs` : null} />
-                  <InfoChip icon={Phone}    label="Contact" value={profile.contact_number} />
+                  <InfoChip
+                    icon={Droplets}
+                    label="Blood"
+                    value={profile.BloodGroup}
+                  />
+                  <InfoChip
+                    icon={Ruler}
+                    label="Height"
+                    value={profile.Height_cm ? `${profile.Height_cm} cm` : null}
+                  />
+                  <InfoChip
+                    icon={Weight}
+                    label="Weight"
+                    value={profile.Weight_kg ? `${profile.Weight_kg} kg` : null}
+                  />
+                  <InfoChip
+                    icon={Calendar}
+                    label="Age"
+                    value={age ? `${age} yrs` : null}
+                  />
+                  <InfoChip
+                    icon={Phone}
+                    label="Contact"
+                    value={profile.contact_number}
+                  />
                 </div>
 
                 <div className="pt-2 border-t text-xs text-muted-foreground space-y-1">
-                  <p>Card ID: <span className="font-mono font-medium text-foreground">{profile.CardID}</span></p>
+                  <p>
+                    Card ID:{" "}
+                    <span className="font-mono font-medium text-foreground">
+                      {profile.CardID}
+                    </span>
+                  </p>
                   <p>
                     Valid:{" "}
                     <span className="text-foreground">
@@ -138,7 +192,9 @@ function PatientPanel({ cardId }) {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">Profile unavailable</p>
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Profile unavailable
+              </p>
             )}
           </div>
         )}
@@ -155,34 +211,47 @@ function PatientPanel({ cardId }) {
                     key={v.visit_id}
                     onClick={() => handleVisitClick(v)}
                     className={`rounded-md border bg-white p-3 text-sm transition-colors
-                      ${v.symptoms
-                        ? "cursor-pointer hover:bg-blue-50 hover:border-blue-200"
-                        : "opacity-60"}`}
+                      ${
+                        v.symptoms
+                          ? "cursor-pointer hover:bg-blue-50 hover:border-blue-200"
+                          : "opacity-60"
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-medium">
                         {new Date(v.visit_date).toLocaleDateString()}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">{v.doctor_name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {v.doctor_name}
+                        </span>
                         {v.symptoms && (
-                          <Badge variant="outline" className="text-xs border-blue-300 text-blue-600">
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-blue-300 text-blue-600"
+                          >
                             Rx
                           </Badge>
                         )}
                       </div>
                     </div>
                     {v.symptoms && (
-                      <p className="text-xs text-muted-foreground truncate">{v.symptoms}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {v.symptoms}
+                      </p>
                     )}
                     {!v.symptoms && (
-                      <p className="text-xs text-muted-foreground italic">No prescription</p>
+                      <p className="text-xs text-muted-foreground italic">
+                        No prescription
+                      </p>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">No previous visits</p>
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No previous visits
+              </p>
             )}
           </div>
         )}
@@ -192,8 +261,15 @@ function PatientPanel({ cardId }) {
       <PrescriptionDialog
         visit={selectedVisit}
         open={prescOpen}
-        onClose={() => { setPrescOpen(false); setSelectedVisit(null); }}
-        fetchFn={selectedVisit ? () => getDoctorPrescription(selectedVisit.visit_id) : null}
+        onClose={() => {
+          setPrescOpen(false);
+          setSelectedVisit(null);
+        }}
+        fetchFn={
+          selectedVisit
+            ? () => getDoctorPrescription(selectedVisit.visit_id)
+            : null
+        }
       />
     </>
   );
@@ -205,17 +281,21 @@ export function DoctorVisits() {
 
   const visitModal = useDisclosure();
   const prescModal = useDisclosure();
-  const viewModal  = useDisclosure();
+  const viewModal = useDisclosure();
   const tokenModal = useDisclosure();
 
-  const [rxVisit,    setRxVisit]    = useState(null);
-  const [viewVisit,  setViewVisit]  = useState(null);
+  const [rxVisit, setRxVisit] = useState(null);
+  const [viewVisit, setViewVisit] = useState(null);
   const [tokenVisit, setTokenVisit] = useState(null);
   const [medications, setMedications] = useState([]);
   // track which panel is shown: "patient" | "prescription"
   const [prescStep, setPrescStep] = useState("patient");
 
-  const { data: visitsRes, loading, refetch } = useFetch(
+  const {
+    data: visitsRes,
+    loading,
+    refetch,
+  } = useFetch(
     useCallback(() => {
       if (!user?.id) return Promise.resolve(null);
       return getDoctorVisits(user.id);
@@ -226,42 +306,57 @@ export function DoctorVisits() {
   const { data: medicineRes } = useFetch(getMedicines);
   const medicines = medicineRes?.data || [];
 
-  const { values: visitForm, setValue: setVF, reset: resetVF } = useForm({ cardId: "" });
-  const { values: rxForm, setValue: setRx, reset: resetRx } = useForm({
-    symptoms: "", advice: "",
+  const {
+    values: visitForm,
+    setValue: setVF,
+    reset: resetVF,
+  } = useForm({ cardId: "" });
+  const {
+    values: rxForm,
+    setValue: setRx,
+    reset: resetRx,
+  } = useForm({
+    symptoms: "",
+    advice: "",
   });
 
-  const { mutate: submitVisit, loading: visitLoading } = useMutation(createVisit, {
-    onSuccess: (result) => {
-      if (result?.success) {
-        visitModal.close();
-        const newVisit = {
-          visit_id: result.data.visitId,
-          card_id: visitForm.cardId,
-        };
-        setRxVisit(newVisit);
-        setPrescStep("patient"); // start on patient panel
-        resetVF();
-        prescModal.open();
+  const { mutate: submitVisit, loading: visitLoading } = useMutation(
+    createVisit,
+    {
+      onSuccess: (result) => {
+        if (result?.success) {
+          visitModal.close();
+          const newVisit = {
+            visit_id: result.data.visitId,
+            card_id: visitForm.cardId,
+          };
+          setRxVisit(newVisit);
+          setPrescStep("patient"); // start on patient panel
+          resetVF();
+          prescModal.open();
+          refetch();
+        }
+      },
+    },
+  );
+
+  const { mutate: submitRx, loading: rxLoading } = useMutation(
+    createPrescription,
+    {
+      successMessage: "Prescription created",
+      onSuccess: (result) => {
+        prescModal.close();
+        resetRx();
+        setMedications([]);
+        // auto-open token dialog
+        setTokenVisit(rxVisit);
+        setRxVisit(null);
+        setPrescStep("patient");
+        tokenModal.open();
         refetch();
-      }
+      },
     },
-  });
-
-  const { mutate: submitRx, loading: rxLoading } = useMutation(createPrescription, {
-    successMessage: "Prescription created",
-    onSuccess: (result) => {
-      prescModal.close();
-      resetRx();
-      setMedications([]);
-      // auto-open token dialog
-      setTokenVisit(rxVisit);
-      setRxVisit(null);
-      setPrescStep("patient");
-      tokenModal.open();
-      refetch();
-    },
-  });
+  );
 
   const handleVisitSubmit = (e) => {
     e.preventDefault();
@@ -275,11 +370,11 @@ export function DoctorVisits() {
       symptoms: rxForm.symptoms,
       advice: rxForm.advice,
       medications: medications.map((m) => ({
-        medicineId:   m.medicineId,
+        medicineId: m.medicineId,
         dosageAmount: m.dosageAmount,
-        dosageUnit:   m.dosageUnit,
-        durationDay:  m.durationDay,
-        frequency:    m.frequency,
+        dosageUnit: m.dosageUnit,
+        durationDay: m.durationDay,
+        frequency: m.frequency,
       })),
     });
   };
@@ -294,8 +389,9 @@ export function DoctorVisits() {
     if (!visit.symptoms) return;
     setViewVisit({
       ...visit,
-      doctor_name:           visit.doctor_name           ?? user?.name,
-      doctor_specialization: visit.doctor_specialization ?? user?.specialization,
+      doctor_name: visit.doctor_name ?? user?.name,
+      doctor_specialization:
+        visit.doctor_specialization ?? user?.specialization,
     });
     viewModal.open();
   };
@@ -332,11 +428,16 @@ export function DoctorVisits() {
       />
 
       {/* ── New Visit Dialog ── */}
-      <Dialog open={visitModal.isOpen} onOpenChange={(v) => !v && visitModal.close()}>
+      <Dialog
+        open={visitModal.isOpen}
+        onOpenChange={(v) => !v && visitModal.close()}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>New Patient Visit</DialogTitle>
-            <DialogDescription>Enter the patient's medical card ID</DialogDescription>
+            <DialogDescription>
+              Enter the patient's medical card ID
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleVisitSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -350,7 +451,13 @@ export function DoctorVisits() {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={visitModal.close}>Cancel</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={visitModal.close}
+              >
+                Cancel
+              </Button>
               <Button type="submit" disabled={visitLoading}>
                 {visitLoading ? "Creating…" : "Create Visit"}
               </Button>
@@ -359,15 +466,23 @@ export function DoctorVisits() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Prescription Dialog (with patient panel) ── */}
-      <Dialog open={prescModal.isOpen} onOpenChange={(v) => !v && closeRxModal()}>
+      <Dialog
+        open={prescModal.isOpen}
+        onOpenChange={(v) => !v && closeRxModal()}
+      >
         <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {prescStep === "patient" ? (
-                <><User className="size-4" />Patient Overview</>
+                <>
+                  <User className="size-4" />
+                  Patient Overview
+                </>
               ) : (
-                <><Stethoscope className="size-4" />Create Prescription</>
+                <>
+                  <Stethoscope className="size-4" />
+                  Create Prescription
+                </>
               )}
             </DialogTitle>
             <DialogDescription>
@@ -395,7 +510,6 @@ export function DoctorVisits() {
             ))}
           </div>
 
-          {/* ── Step 1: Patient panel ── */}
           {prescStep === "patient" && rxVisit?.card_id && (
             <div className="space-y-4">
               <PatientPanel cardId={rxVisit.card_id} />
@@ -408,7 +522,6 @@ export function DoctorVisits() {
             </div>
           )}
 
-          {/* ── Step 2: Prescription form ── */}
           {prescStep === "prescription" && (
             <form onSubmit={handleRxSubmit} className="space-y-4">
               <div className="space-y-1.5">
@@ -438,7 +551,9 @@ export function DoctorVisits() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => setMedications((prev) => [...prev, { ...EMPTY_MED }])}
+                    onClick={() =>
+                      setMedications((prev) => [...prev, { ...EMPTY_MED }])
+                    }
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add Medicine
@@ -475,7 +590,11 @@ export function DoctorVisits() {
                   Back to Patient
                 </Button>
                 <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={closeRxModal}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeRxModal}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit" disabled={rxLoading}>
@@ -488,19 +607,27 @@ export function DoctorVisits() {
         </DialogContent>
       </Dialog>
 
-      {/* ── View Prescription Dialog (read-only) ── */}
       <PrescriptionDialog
         visit={viewVisit}
         open={viewModal.isOpen}
-        onClose={() => { viewModal.close(); setViewVisit(null); }}
+        onClose={() => {
+          viewModal.close();
+          setViewVisit(null);
+        }}
       />
 
-      {/* ── Token Dialog (auto-opens after prescription) ── */}
       <TokenDialog
         visit={tokenVisit}
         open={tokenModal.isOpen}
-        onClose={() => { tokenModal.close(); setTokenVisit(null); }}
-        onCreated={() => { tokenModal.close(); setTokenVisit(null); refetch(); }}
+        onClose={() => {
+          tokenModal.close();
+          setTokenVisit(null);
+        }}
+        onCreated={() => {
+          tokenModal.close();
+          setTokenVisit(null);
+          refetch();
+        }}
       />
     </>
   );

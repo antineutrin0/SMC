@@ -19,8 +19,6 @@ export function FirstAidDispenseDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-lg w-full max-h-[90vh] overflow-y-auto">
-
-        {/* ── Header ───────────────────────── */}
         <DialogHeader>
           <DialogTitle>Dispense First Aid</DialogTitle>
           <DialogDescription>
@@ -28,10 +26,7 @@ export function FirstAidDispenseDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* ── Body ─────────────────────────── */}
         <div className="space-y-4">
-
-          {/* Request Info */}
           <div className="bg-muted/40 p-3 rounded-lg space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Status</span>
@@ -55,7 +50,6 @@ export function FirstAidDispenseDialog({
             )}
           </div>
 
-          {/* 🧪 Items Section */}
           <div className="space-y-3">
             <p className="text-sm font-medium">Items to Dispense</p>
 
@@ -74,13 +68,11 @@ export function FirstAidDispenseDialog({
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No items found.
-              </p>
+              <p className="text-sm text-muted-foreground">No items found.</p>
             )}
           </div>
 
-          {/* ⚠️ Note */}
+          {/*  Note */}
           <p className="text-xs text-muted-foreground">
             This action will deduct items from substore inventory.
           </p>
@@ -97,7 +89,6 @@ export function FirstAidDispenseDialog({
             </Button>
           </div>
         </div>
-
       </DialogContent>
     </Dialog>
   );

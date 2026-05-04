@@ -1,21 +1,6 @@
 import { Minus, Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-
-/**
- * NumericInput
- *
- * A reusable bounded numeric input with +/− stepper buttons.
- *
- * Props:
- *   value      {number|string}  - controlled value
- *   onChange   {(val: number) => void} - called with the clamped number
- *   min        {number}         - minimum allowed value (default: 0)
- *   max        {number}         - maximum allowed value (default: Infinity)
- *   step       {number}         - increment/decrement step (default: 1)
- *   placeholder {string}
- *   disabled   {boolean}
- */
 export function NumericInput({
   value,
   onChange,
@@ -25,7 +10,6 @@ export function NumericInput({
   placeholder = "0",
   disabled = false,
 }) {
-  // Clamp a raw number between min and max
   const clamp = (num) => Math.min(Math.max(num, min), max);
 
   const handleDecrement = () => {
@@ -38,11 +22,9 @@ export function NumericInput({
     onChange(next);
   };
 
-  // On manual typing: allow empty string while typing, clamp on valid numbers
   const handleChange = (e) => {
     const raw = e.target.value;
 
-    // Allow clearing the field while the user is typing
     if (raw === "" || raw === "-") {
       onChange("");
       return;
@@ -54,7 +36,6 @@ export function NumericInput({
     }
   };
 
-  // On blur: if empty or below min, snap to min
   const handleBlur = () => {
     if (value === "" || value === undefined || value === null) {
       onChange(min);

@@ -67,11 +67,6 @@ export function RequestMedicineTable({ history }) {
                     {req.status}
                   </Badge>
                 </TableCell>
-                {/* <TableCell className="text-sm text-muted-foreground">
-                  {req.status?.toUpperCase() !== "PENDING"
-                    ? formatDate(req.decision_date)
-                    : "Waiting..."}
-                </TableCell> */}
                 <TableCell className="text-right text-xs max-w-[200px] truncate italic">
                   {req.admin_remarks || "No remarks"}
                 </TableCell>

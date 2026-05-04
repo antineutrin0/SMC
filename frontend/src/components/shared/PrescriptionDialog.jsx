@@ -20,10 +20,12 @@ import { Separator } from "../ui/separator";
 import { StatChip } from ".";
 import { useFetch } from "../../hooks";
 import { useCallback } from "react";
-import { getPrescription, getPrescriptionFromPatient } from "../../services/api";
+import {
+  getPrescription,
+  getPrescriptionFromPatient,
+} from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 
-// ── Small info row used in the header card ─────────────────────
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null;
   return (
@@ -35,16 +37,14 @@ function InfoRow({ icon: Icon, label, value }) {
   );
 }
 
-// ── Component ─────────────────────────────────────────────────
 export function PrescriptionDialog({ visit, open, onClose }) {
-  const {user}= useAuth();
+  const { user } = useAuth();
   const { data: presData, loading } = useFetch(
     useCallback(() => {
       if (!visit?.visit_id) return Promise.resolve(null);
-      if(user.role === "Patient")
+      if (user.role === "Patient")
         return getPrescriptionFromPatient(visit.visit_id);
-      else
-      return getPrescription(visit.visit_id);
+      else return getPrescription(visit.visit_id);
     }, [visit?.visit_id]),
   );
 
@@ -54,8 +54,6 @@ export function PrescriptionDialog({ visit, open, onClose }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-
-        {/* ── Dialog Header ─────────────────────────────────── */}
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Stethoscope className="size-5 text-primary" />
@@ -76,10 +74,8 @@ export function PrescriptionDialog({ visit, open, onClose }) {
           )}
         </DialogHeader>
 
-        {/* ── Doctor & Patient Info Card ────────────────────── */}
         {visit && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border bg-muted/30 p-4">
-
             {/* Doctor column */}
             <div className="space-y-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
@@ -97,7 +93,6 @@ export function PrescriptionDialog({ visit, open, onClose }) {
               />
             </div>
 
-            {/* Divider on mobile (horizontal), hidden on sm+ */}
             <Separator className="sm:hidden" />
 
             {/* Patient column */}
@@ -110,16 +105,11 @@ export function PrescriptionDialog({ visit, open, onClose }) {
                 label="Name"
                 value={visit.patient_name}
               />
-              <InfoRow
-                icon={Hash}
-                label="Card ID"
-                value={visit.card_id}
-              />
+              <InfoRow icon={Hash} label="Card ID" value={visit.card_id} />
             </div>
           </div>
         )}
 
-        {/* ── Visit Summary (Symptoms + Advice) ─────────────── */}
         {visit && (visit.symptoms || visit.advice) && (
           <div className="grid gap-3 rounded-lg border bg-muted/30 p-4">
             {visit.symptoms && (
@@ -147,7 +137,6 @@ export function PrescriptionDialog({ visit, open, onClose }) {
           </div>
         )}
 
-        {/* ── Prescribed Medicines ──────────────────────────── */}
         <div>
           <h3 className="flex items-center gap-2 text-sm font-semibold mb-3">
             <Pill className="size-4 text-primary" />
@@ -201,8 +190,7 @@ export function PrescriptionDialog({ visit, open, onClose }) {
                     <span className="font-medium text-foreground">
                       Duration:
                     </span>{" "}
-                    {med.duration_day}{" "}
-                    {med.duration_day === 1 ? "day" : "days"}
+                    {med.duration_day} {med.duration_day === 1 ? "day" : "days"}
                   </div>
                 )}
               </div>
@@ -215,7 +203,6 @@ export function PrescriptionDialog({ visit, open, onClose }) {
             )}
           </div>
         </div>
-
       </DialogContent>
     </Dialog>
   );

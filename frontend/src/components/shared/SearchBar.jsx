@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "../ui/input";
 
-
 export function SearchBar({
   value,
   onChange,
@@ -56,10 +55,6 @@ export function SearchBar({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// useSearch — generic text-only filter hook.
-// Used by MedicineList (unchanged).
-// ─────────────────────────────────────────────────────────────
 export function useSearch(data = [], accessors = []) {
   const [query, setQuery] = useState("");
 
@@ -78,57 +73,29 @@ export function useSearch(data = [], accessors = []) {
   return { query, setQuery, filtered };
 }
 
-// ─────────────────────────────────────────────────────────────
-// toLocalDateStr — converts any date value to "YYYY-MM-DD"
-// using the browser's LOCAL timezone (not UTC).
-//
-// This is the key fix: new Date("2026-05-02T00:00:00+06:00")
-//   .toISOString()      → "2026-05-01T18:00:00Z"  ❌ wrong day in UTC
-//   toLocalDateStr()    → "2026-05-02"             ✅ correct local day
-// ─────────────────────────────────────────────────────────────
 function toLocalDateStr(value) {
   if (!value) return "";
   const d = new Date(value);
   if (isNaN(d)) return "";
   const yyyy = d.getFullYear();
-  const mm   = String(d.getMonth() + 1).padStart(2, "0");
-  const dd   = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`; // "YYYY-MM-DD"
 }
 
-// ─────────────────────────────────────────────────────────────
-// useVisitFilter — combined doctor name + date filter.
-//
-// `date` is a "YYYY-MM-DD" string from <input type="date">
-// or "" when empty.
-//
-// Both the input value and visit_date are converted to local
-// "YYYY-MM-DD" strings before comparing, so timezone shifts
-// never cause off-by-one day mismatches.
-//
-// Behaviour:
-//   • Only query  → filter by doctor name
-//   • Only date   → filter by date
-//   • Both        → must match both (AND logic)
-//   • Neither     → return all visits
-// ─────────────────────────────────────────────────────────────
 export function useVisitFilter(visits = []) {
   const [query, setQuery] = useState("");
-  const [date,  setDate]  = useState(""); // "YYYY-MM-DD" or ""
+  const [date, setDate] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
 
     return visits.filter((v) => {
-      // ── Doctor name filter ──────────────────────────────
       const nameMatch =
-        q === "" ||
-        (v.doctor_name ?? "").toLowerCase().includes(q);
+        q === "" || (v.doctor_name ?? "").toLowerCase().includes(q);
 
-      // ── Date filter (local timezone safe) ───────────────
       let dateMatch = true;
       if (date !== "") {
-        // Convert visit_date using local time parts — never UTC
         const visitLocalStr = toLocalDateStr(v.visit_date);
         dateMatch = visitLocalStr === date;
       }

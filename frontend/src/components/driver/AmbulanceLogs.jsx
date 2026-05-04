@@ -1,15 +1,28 @@
 import { useCallback, useState } from "react";
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "../ui/dialog";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "../ui/table";
 import { Badge } from "../ui/badge";
 import { Ambulance, Plus, MapPin, CheckCircle } from "lucide-react";
@@ -46,10 +59,9 @@ function calcTotalKms(initial, final) {
   return total >= 0 ? total.toFixed(1) : 0;
 }
 
-// ── Complete Trip Dialog ───────────────────────────────────────
 function CompleteTripDialog({ log, open, onClose, onConfirm, loading }) {
   const [finalKms, setFinalKms] = useState("");
-  const [error, setError]       = useState("");
+  const [error, setError] = useState("");
 
   const initialKms = log?.initial_kms ?? 0;
 
@@ -70,7 +82,6 @@ function CompleteTripDialog({ log, open, onClose, onConfirm, loading }) {
     onConfirm(log.log_id, val);
   };
 
-  // Reset local state when dialog opens for a new log
   const handleOpenChange = (v) => {
     if (!v) {
       setFinalKms("");
@@ -117,9 +128,7 @@ function CompleteTripDialog({ log, open, onClose, onConfirm, loading }) {
               required
               autoFocus
             />
-            {error && (
-              <p className="text-xs text-destructive">{error}</p>
-            )}
+            {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
 
           {/* Live total preview */}
@@ -152,7 +161,7 @@ export function AmbulanceLogs() {
   const { isOpen, open, close } = useDisclosure();
 
   // Complete trip dialog
-  const [completingLog, setCompletingLog] = useState(null); // the log being completed
+  const [completingLog, setCompletingLog] = useState(null);
 
   const { data, loading, refetch } = useFetch(
     useCallback(() => getAmbulanceLogs(user?.id), [user?.id]),
@@ -160,13 +169,16 @@ export function AmbulanceLogs() {
   );
   const logs = data?.data ?? [];
 
-  // ── New log form ────────────────────────────────────────────
-  const { values: form, setValue, reset } = useForm({
-    patientId:       "",
-    pickupLocation:  "",
-    destination:     "",
-    departureTime:   "",
-    initialKms:      "",   // ← consistent camelCase throughout
+  const {
+    values: form,
+    setValue,
+    reset,
+  } = useForm({
+    patientId: "",
+    pickupLocation: "",
+    destination: "",
+    departureTime: "",
+    initialKms: "",
   });
 
   const { mutate: submit, loading: submitting } = useMutation(
@@ -181,15 +193,9 @@ export function AmbulanceLogs() {
     },
   );
 
-  // ── Complete trip mutation ───────────────────────────────────
   const { mutate: endTrip, loading: completing } = useMutation(
-    // Backend: PATCH /api/driver/logs/:logId/complete
-    // Body: { returnTime, finalKms }
     ({ logId, finalKms }) =>
-      completeTrip(logId, 
-         new Date().toISOString(),
-         Number(finalKms),
-      ),
+      completeTrip(logId, new Date().toISOString(), Number(finalKms)),
     {
       successMessage: "Trip completed",
       onSuccess: () => {
@@ -203,11 +209,11 @@ export function AmbulanceLogs() {
   const handleSubmit = (e) => {
     e.preventDefault();
     submit({
-      patientId:      form.patientId,
+      patientId: form.patientId,
       pickupLocation: form.pickupLocation,
-      destination:    form.destination,
-      departureTime:  form.departureTime || undefined,
-      initialKms:     Number(form.initialKms),  // ← correct field name
+      destination: form.destination,
+      departureTime: form.departureTime || undefined,
+      initialKms: Number(form.initialKms),
     });
   };
 
@@ -215,11 +221,9 @@ export function AmbulanceLogs() {
     endTrip({ logId, finalKms });
   };
 
-  // ── Stats ───────────────────────────────────────────────────
   const activeCount = logs.filter((l) => !l.return_time).length;
-  const doneCount   = logs.filter((l) =>  l.return_time).length;
+  const doneCount = logs.filter((l) => l.return_time).length;
 
-  // ── Render ───────────────────────────────────────────────────
   return (
     <>
       {/* Header */}
@@ -233,9 +237,9 @@ export function AmbulanceLogs() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatsCard title="Total"     value={logs.length}  icon={Ambulance}    />
-        <StatsCard title="Active"    value={activeCount}  icon={MapPin}       />
-        <StatsCard title="Completed" value={doneCount}    icon={CheckCircle}  />
+        <StatsCard title="Total" value={logs.length} icon={Ambulance} />
+        <StatsCard title="Active" value={activeCount} icon={MapPin} />
+        <StatsCard title="Completed" value={doneCount} icon={CheckCircle} />
       </div>
 
       {/* Table */}
@@ -269,7 +273,10 @@ export function AmbulanceLogs() {
                 <TableBody>
                   {logs.map((log) => {
                     // FIX: API returns snake_case — use initial_kms / final_kms
-                    const totalKms = calcTotalKms(log.initial_kms, log.final_kms);
+                    const totalKms = calcTotalKms(
+                      log.initial_kms,
+                      log.final_kms,
+                    );
 
                     return (
                       <TableRow key={log.log_id}>
@@ -301,7 +308,10 @@ export function AmbulanceLogs() {
                           {log.return_time ? (
                             <Badge>
                               Done
-                              {calcDuration(log.departure_time, log.return_time) &&
+                              {calcDuration(
+                                log.departure_time,
+                                log.return_time,
+                              ) &&
                                 ` · ${calcDuration(log.departure_time, log.return_time)}`}
                             </Badge>
                           ) : (
@@ -397,7 +407,6 @@ export function AmbulanceLogs() {
                 min="0"
                 step="0.1"
                 placeholder="e.g. 120.5"
-                // FIX: was form.initialkms (undefined) — now form.initialKms
                 value={form.initialKms}
                 onChange={(e) => setValue("initialKms", e.target.value)}
                 required
@@ -416,7 +425,6 @@ export function AmbulanceLogs() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Complete Trip Dialog ─────────────────────────────── */}
       <CompleteTripDialog
         log={completingLog}
         open={!!completingLog}
