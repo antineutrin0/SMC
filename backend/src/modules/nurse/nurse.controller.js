@@ -390,10 +390,11 @@ const getProcessedFirstAidRequests = async (req, res) => {
 
 // POST /api/nurse/first-aid/:requestId/dispense
 const dispenseFirstAidRequest = async (req, res) => {
+  console.log("Dispensing first aid for request ID:", req.params.id);
   const connection = await db.getConnection();
 
   try {
-    const { requestId } = req.params;
+    const { id } = req.params;
     const employeeId = req.user.id;
 
     await connection.beginTransaction();
@@ -404,7 +405,7 @@ const dispenseFirstAidRequest = async (req, res) => {
        FROM first_aid_request 
        WHERE request_id = ? 
        FOR UPDATE`,
-      [requestId]
+      [id]
     );
 
     if (!request) {
@@ -425,10 +426,11 @@ const dispenseFirstAidRequest = async (req, res) => {
 
     // 2️⃣ Get items
     const [items] = await connection.query(
-      `SELECT * 
-       FROM first_aid_item 
+      `SELECT fai.*, m.name
+       FROM first_aid_item fai
+       JOIN medicine m ON fai.medicine_id = m.medicine_id
        WHERE request_id = ?`,
-      [requestId]
+      [id]
     );
 
     if (!items.length) {
@@ -455,7 +457,7 @@ const dispenseFirstAidRequest = async (req, res) => {
         await connection.rollback();
         return badRequest(
           res,
-          `Insufficient substore stock for medicine_id ${item.medicine_id}`
+          `Insufficient substore stock for medicine ${item.name} (requested ${item.quantity}, available ${stock})`
         );
       }
 
@@ -487,7 +489,7 @@ const dispenseFirstAidRequest = async (req, res) => {
       `UPDATE first_aid_request 
        SET statue = 'DISPENSED' 
        WHERE request_id = ?`,
-      [requestId]
+      [id]
     );
 
     await connection.commit();
@@ -498,6 +500,47 @@ const dispenseFirstAidRequest = async (req, res) => {
     serverError(res, err, "nurse.dispenseFirstAidRequest");
   } finally {
     connection.release();
+  }
+};
+
+//GET /api/nurse/first-aid/:requestId
+const getFirstAidRequestDetails = async (req, res) => {
+  console.log("Fetching details for request ID:", req.params.id);
+  try {
+    const { id } = req.params;
+
+    // 1️⃣ Get request + patient
+    const [[request]] = await db.query(
+      `SELECT far.*, p.fullname
+       FROM first_aid_request far
+       JOIN MedicalCard mc ON far.requested_by = mc.CardID
+       JOIN Person p ON mc.PersonID = p.person_id
+       WHERE far.request_id = ?`,
+      [id]
+    );
+
+    if (!request) {
+      return notFound(res, "Request not found");
+    }
+
+    // 2️⃣ Get items + medicine name
+    const [items] = await db.query(
+      `SELECT fai.medicine_id, fai.quantity, m.name
+       FROM first_aid_item fai
+       JOIN medicine m ON fai.medicine_id = m.medicine_id
+       WHERE fai.request_id = ?`,
+      [id]
+    );
+    console.log("request details fetched:", request);
+    console.log("Items for request:", items);
+    return ok(res, {
+      data: {
+        ...request,
+        items,
+      },
+    });
+  } catch (err) {
+    serverError(res, err, "nurse.getFirstAidRequestDetails");
   }
 };
 
@@ -540,4 +583,5 @@ module.exports = {
   getProcessedFirstAidRequests,
   dispenseFirstAidRequest,
   getSubstoreInventory,
+  getFirstAidRequestDetails,
 };

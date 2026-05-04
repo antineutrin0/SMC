@@ -22,5 +22,6 @@ router.get("/first-aid/processed", ctrl.getProcessedFirstAidRequests);
 
 // Dispense First Aid Request (Pharmacist action after doctor processes it)
 router.post("/first-aid/:id/dispense", ctrl.dispenseFirstAidRequest);
+router.get("/first-aid/:id", ctrl.getFirstAidRequestDetails);
 
 module.exports = router;
