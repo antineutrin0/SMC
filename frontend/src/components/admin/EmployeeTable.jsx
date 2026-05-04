@@ -16,15 +16,29 @@ import {
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Users, Plus } from "lucide-react";
+import { useState } from "react";
 import { useFetch, useDisclosure } from "../../hooks";
 import { getEmployees } from "../../services/api";
 import { LoadingSpinner, EmptyState, TableWrapper } from "../shared";
 import { CreateEmployeeDialog } from "./CreateEmployeeDialog";
+import { EmployeeDetailDialog } from "./EmployeeDetailDialog";
 
 export function EmployeeTable() {
   const { data, loading, refetch } = useFetch(getEmployees);
-  const { isOpen, open, close } = useDisclosure();
+  const createDisc = useDisclosure();
+  const detailDisc = useDisclosure();
+  const [selectedId, setSelectedId] = useState(null);
   const employees = data?.data ?? [];
+
+  const handleRowClick = (emp) => {
+    setSelectedId(emp.employee_id);
+    detailDisc.open();
+  };
+
+  const handleDetailClose = () => {
+    detailDisc.close();
+    setSelectedId(null);
+  };
 
   return (
     <>
@@ -35,7 +49,7 @@ export function EmployeeTable() {
               <CardTitle>Employee Management</CardTitle>
               <CardDescription>All medical centre staff</CardDescription>
             </div>
-            <Button size="sm" onClick={open}>
+            <Button size="sm" onClick={createDisc.open}>
               <Plus className="w-4 h-4 mr-1.5" />
               Add Employee
             </Button>
@@ -63,7 +77,11 @@ export function EmployeeTable() {
                 </TableHeader>
                 <TableBody>
                   {employees.map((emp) => (
-                    <TableRow key={emp.employee_id}>
+                    <TableRow
+                      key={emp.employee_id}
+                      className="cursor-pointer hover:bg-muted/60 transition-colors"
+                      onClick={() => handleRowClick(emp)}
+                    >
                       <TableCell className="font-mono text-xs">
                         {emp.employee_id}
                       </TableCell>
@@ -103,8 +121,15 @@ export function EmployeeTable() {
       </Card>
 
       <CreateEmployeeDialog
-        isOpen={isOpen}
-        onClose={close}
+        isOpen={createDisc.isOpen}
+        onClose={createDisc.close}
+        onSuccess={refetch}
+      />
+
+      <EmployeeDetailDialog
+        employeeId={selectedId}
+        open={detailDisc.isOpen}
+        onClose={handleDetailClose}
         onSuccess={refetch}
       />
     </>
