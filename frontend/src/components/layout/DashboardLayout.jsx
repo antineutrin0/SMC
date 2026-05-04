@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { EmployeeProfileDialog } from "../shared/EmployeeProfileDialog";
 import {
   LogOut,
   Home,
@@ -32,14 +33,26 @@ const NAV_BY_ROLE = {
   Doctor: [
     { label: "Patient Visits", path: "/dashboard", icon: Stethoscope },
     { label: "Medicines", path: "/dashboard/medicines", icon: Pill },
-    { label: "First Aid Requests", path: "/dashboard/firstaid", icon: Ambulance },
+    {
+      label: "First Aid Requests",
+      path: "/dashboard/firstaid",
+      icon: Ambulance,
+    },
   ],
   Nurse: [
     { label: "Pending Tokens", path: "/dashboard", icon: Pill },
     { label: "Dispensing History", path: "/dashboard/history", icon: FileText },
     { label: "Medicine Requests", path: "/dashboard/requests", icon: Package },
-    { label: "Substore Inventory", path: "/dashboard/substore-inventory", icon: Activity },
-    { label: "First Aid Requests", path: "/dashboard/first-aid", icon: Ambulance },
+    {
+      label: "Substore Inventory",
+      path: "/dashboard/substore-inventory",
+      icon: Activity,
+    },
+    {
+      label: "First Aid Requests",
+      path: "/dashboard/first-aid",
+      icon: Ambulance,
+    },
   ],
   Registrar: [
     { label: "Inventory", path: "/dashboard", icon: Pill },
@@ -75,6 +88,7 @@ function Sidebar({ open, onClose }) {
     logout();
     navigate("/");
   };
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <>
@@ -115,9 +129,20 @@ function Sidebar({ open, onClose }) {
 
         {/* User Info */}
         <div className="px-4 py-3 bg-blue-50 border-b">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-semibold shrink-0">
-              {(user?.fullname || user?.id || "?").charAt(0).toUpperCase()}
+          <button
+            className="flex items-center gap-3 w-full text-left hover:opacity-80 transition-opacity"
+            onClick={() => user?.type !== "Patient" && setProfileOpen(true)}
+          >
+            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-semibold shrink-0 overflow-hidden">
+              {user?.photo_url ? (
+                <img
+                  src={user.photo_url}
+                  alt={user.fullname}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                (user?.fullname || user?.id || "?").charAt(0).toUpperCase()
+              )}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">
@@ -127,7 +152,7 @@ function Sidebar({ open, onClose }) {
                 {user?.type}
               </Badge>
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Nav Items */}
@@ -173,6 +198,12 @@ function Sidebar({ open, onClose }) {
           </button>
         </div>
       </aside>
+      {user?.type !== "Patient" && (
+        <EmployeeProfileDialog
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+        />
+      )}
     </>
   );
 }

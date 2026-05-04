@@ -69,6 +69,18 @@ export const reviewApplication = (id, data) =>
 export const approveMedicalCard = (data) =>
   post("/admin/applications/approve", data);
 export const createEmployee = (data) => post("/admin/employees", data);
+// First Aid Requests
+export const getAdminFirstAidRequests = () => get("/admin/first-aid");
+export const getAdminFirstAidRequestById = (requestId) => get(`/admin/first-aid/${requestId}`);
+export const adminApproveFirstAidRequest = (requestId, status) =>
+  patch(`/admin/first-aid/${requestId}`, { status });
+// Employees (additional)
+export const getEmployeeById = (employeeId) => get(`/admin/employees/${employeeId}`);
+export const updateEmployee = (employeeId, data) => put(`/admin/employees/${employeeId}`, data);
+export const updateEmployeeStatus = (employeeId, is_active) =>
+  patch(`/admin/employees/${employeeId}/status`, { is_active });
+export const resetEmployeePassword = (employeeId, password) =>
+  patch(`/admin/employees/${employeeId}/reset-password`, { password });
 
 // ─── Doctor ──────────────────────────────────────────────────
 
@@ -138,3 +150,8 @@ export const updateAmbulanceLog = (id, data) =>
   patch(`/driver/logs/${id}`, data);
 export const completeTrip = (id, returnTime, finalKms) =>
   patch(`/driver/logs/${id}/complete`, { returnTime, finalKms });
+
+// ─── Employee Profile ─────────────────────────────────────────
+export const getMyProfile = () => get("/profile/me");
+export const updateMyProfile = (data) => put("/profile/me", data);
+export const changeMyPassword = (data) => patch("/profile/me/password", data);

@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { PageLoader } from "./components/shared";
 import { FirstAidRequests } from "./components/doctor/FirstAidRequests";
+import AdminFirstAidPage from "./pages/admin/AdminFirstAidPage";
 
 // ─── Lazy load pages ──────────────────────────────────────────
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -187,7 +188,7 @@ function AppRoutes() {
             <Route path="applications" element={<AdminApplicationsPage />} />
             <Route path="inventory" element={<AdminInventoryPage />} />
             <Route path="transactions" element={<AdminTransactionsPage />} />
-            {/* <Route path="firstaidrequest" element={<AdminFirstAidPage />} /> */}
+            <Route path="firstaidrequest" element={<AdminFirstAidPage />} />
           </Route>
 
           {/* Doctor */}

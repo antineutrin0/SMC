@@ -38,6 +38,7 @@ app.use("/api/patient", require("./src/modules/patient/patient.routes"));
 app.use("/api/nurse", require("./src/modules/nurse/nurse.routes"));
 app.use("/api/pharmacist", require("./src/modules/pharmacist/pharmacist.routes"));
 app.use("/api/driver", require("./src/modules/driver/driver.routes"));
+app.use("/api/profile", require("./src/modules/profile/profile.routes"));
 
 // ── Health check ─────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
