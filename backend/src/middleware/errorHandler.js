@@ -1,7 +1,5 @@
-/**
- * Global error handling middleware.
- * Catches anything passed to next(err)
- */
+// Global error handling middleware. Catches anything passed to next(err)
+ 
 const errorHandler = (err, req, res, next) => {
   console.error("[UNHANDLED ERROR]", err);
 
