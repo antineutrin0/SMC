@@ -94,6 +94,9 @@ export const getApprovedFirstAidRequests = () =>
   get("/doctor/first-aid/approved");
 export const processFirstAidRequest = (requestId, items) =>
   post(`/doctor/first-aid/${requestId}/process`, { items });
+export const getDoctorPrescription = (visitId) => get(`/doctor/prescriptions/${visitId}`);
+export const getPatientProfileForDoctor = (cardId) => get(`/patient/${cardId}/profile`);
+export const getPatientVisitsForDoctor = (cardId) => get(`/patient/${cardId}/visits`);
 
 // ─── Patient ─────────────────────────────────────────────────
 

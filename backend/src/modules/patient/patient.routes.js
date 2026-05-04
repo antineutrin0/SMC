@@ -6,8 +6,8 @@ const validate = require("../../middleware/validate");
 // Public — anyone can apply for a medical card
 router.post("/apply", ctrl.applyForMedicalCard);
 
-// Protected — Patient only
-router.use(verifyToken, requireRole("Patient"));
+// Protected — Patient and Doctor only
+router.use(verifyToken, requireRole("Patient", "Doctor"));
 
 router.get("/:patientId/profile", ctrl.getProfile);
 router.get("/:patientId/visits",  ctrl.getVisits);
