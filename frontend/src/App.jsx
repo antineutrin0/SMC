@@ -31,9 +31,9 @@ const AdminApplicationsPage = lazy(
 const AdminInventoryPage = lazy(
   () => import("./pages/admin/AdminInventoryPage"),
 );
-// const AdminTransactionsPage = lazy(
-//   () => import("./pages/admin/AdminTransactionsPage"),
-// );
+const AdminTransactionsPage = lazy(
+  () => import("./pages/admin/AdminTransactionsHistory"),
+);
 // const AdminFirstAidPage = lazy(() => import("./pages/admin/AdminFirstAidPage"));
 // Doctor
 const DoctorVisitsPage = lazy(() => import("./pages/doctor/DoctorVisitsPage"));
@@ -185,6 +185,8 @@ function AppRoutes() {
             <Route path="rosters" element={<AdminRostersPage />} />
             <Route path="applications" element={<AdminApplicationsPage />} />
             <Route path="inventory" element={<AdminInventoryPage />} />
+            <Route path="transactions" element={<AdminTransactionsPage />} />
+            {/* <Route path="firstaidrequest" element={<AdminFirstAidPage />} /> */}
           </Route>
 
           {/* Doctor */}
@@ -198,7 +200,7 @@ function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={["Nurse"]} />}>
             <Route path="history" element={<NurseHistoryPage />} />
             <Route path="requests" element={<NurseRequestPage />} />
-            <Route path="inventory" element={<NurseSubstoreInventoryPage/>}/>
+            <Route path="inventory" element={<NurseSubstoreInventoryPage />} />
           </Route>
 
           {/* Pharmacist */}

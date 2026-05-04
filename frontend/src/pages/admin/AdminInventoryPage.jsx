@@ -3,7 +3,7 @@ import { SectionHeader } from "../../components/shared";
 import { useFetch } from "../../hooks";
 import { getPharmacistMedicines } from "../../services/api";
 
-export default function AdminApplicationsPage() {
+export default function AdminInventoryPage() {
   const { data, loading, refetch } = useFetch(getPharmacistMedicines);
   const medicines = data?.data ?? [];
   return (
